@@ -7220,43 +7220,153 @@ def patch_geometrie_v3(data_root):
     langue = normaliser_code_langue(LANGUE_CIBLE)
 
     # ============================================================
-    # PROFILS EXISTANTS - VALEURS CONSERVÉES
+    # PROFILS D'AFFICHAGE PAR LANGUE
     # ============================================================
+    # IMPORTANT : les valeurs *_x modifient UNIQUEMENT la largeur du texte.
+    # Plus la valeur est petite, plus le texte est étroit et tient facilement
+    # dans son cadre. La hauteur Y d'origine est conservée par le moteur.
+    #
+    # largeur_menu  : largeur des boutons des menus Pause et Principal.
+    # pause         : position gauche et droite du panneau du menu Pause.
+    # principal     : position gauche et droite du menu de démarrage.
+    # title_x       : grands titres du Livre noir et des fenêtres.
+    # title_gr_x    : même titre lorsqu'il est grisé/désactivé.
+    # title_s_x     : même titre lorsqu'il est sélectionné/en surbrillance.
+    # stitle_x      : choix principaux (Sauver, Options, Photo, Extra...).
+    # stitle_s_x    : choix principal actuellement sélectionné.
+    # stitle_g_x    : choix principal grisé/désactivé.
+    # stitlesm_x    : petits sous-titres et variantes compactes.
+    # ititle_x      : textes des onglets, statistiques et objectifs du Livre noir.
+    # ititle_s_x    : même petit texte lorsqu'il est sélectionné.
+    # ititle_g_x    : même petit texte lorsqu'il est grisé/désactivé.
+    # gdef_w_x      : texte blanc des boutons/aides (TextCC et MouseBx).
+    # gdef_s_x      : texte orange du bouton actuellement sélectionné.
+    # gdef_gy_x     : texte des boutons grisés ou indisponibles.
+    # desc_wht_x    : texte blanc de la colonne droite des statistiques
+    #                 (Percentuale completata, Valutazione, Tempo et valeurs).
+    # desc_gry_x    : même colonne lorsqu'un texte est affiché en gris.
+    # description_x1: bord gauche des descriptions du Livre noir ; une valeur
+    #                 plus grande décale la description vers la droite.
     profils = {
         "en": {
-            "edition": "SLES_526.41", "largeur_menu": 220.0,
-            "pause": (50.0, 270.0), "principal": (201.0, 421.0),
-            "stitle_x": 0.35, "stitle_s_x": 0.35, "stitle_g_x": 0.35,
-            "ititle_x": 0.22, "ititle_s_x": 0.22, "ititle_g_x": 0.22,
+            "edition": "SLES_526.41",       # Edition PS2 anglaise source.
+            "largeur_menu": 220.0,          # Largeur originale des boutons.
+            "pause": (50.0, 270.0),         # Panneau Pause original.
+            "principal": (201.0, 421.0),    # Menu principal original.
+            "title_x": 0.40,                # Grands titres.
+            "title_gr_x": 0.40,             # Grands titres désactivés.
+            "title_s_x": 0.505,             # Grands titres sélectionnés.
+            "stitle_x": 0.35,               # Choix principaux.
+            "stitle_s_x": 0.35,             # Choix sélectionnés.
+            "stitle_g_x": 0.35,             # Choix désactivés.
+            "stitlesm_x": 0.20,             # Petits sous-titres.
+            "ititle_x": 0.22,               # Onglets/statistiques/objectifs.
+            "ititle_s_x": 0.22,             # Petits textes sélectionnés.
+            "ititle_g_x": 0.22,             # Petits textes désactivés.
+            "gdef_w_x": 0.65,               # Boutons/aides blancs d'origine.
+            "gdef_s_x": 0.755,              # Bouton orange sélectionné.
+            "gdef_gy_x": 0.65,              # Boutons grisés d'origine.
+            "desc_wht_x": 0.53,             # Colonne droite Stats d'origine.
+            "desc_gry_x": 0.53,             # Colonne Stats grisée d'origine.
+            # Début des descriptions Livre noir.
             "description_x1": 261.0,
         },
         "fr": {
-            "edition": "SLES_526.42", "largeur_menu": 300.0,
-            "pause": (10.0, 310.0), "principal": (161.0, 461.0),
-            "stitle_x": 0.29, "stitle_s_x": 0.29, "stitle_g_x": 0.29,
-            "ititle_x": 0.14, "ititle_s_x": 0.14, "ititle_g_x": 0.14,
-            "description_x1": 280.0,
+            "edition": "SLES_526.42",       # Edition PS2 française source.
+            "largeur_menu": 300.0,          # Boutons élargis à 300 pixels.
+            "pause": (10.0, 310.0),         # Menu Pause élargi vers la gauche.
+            "principal": (161.0, 461.0),    # Menu principal élargi.
+            # Titre supérieur droit du Livre noir.
+            "title_x": 0.20,
+            "title_gr_x": 0.20,             # Même titre lorsqu'il est grisé.
+            # Même titre lorsqu'il est sélectionné.
+            "title_s_x": 0.30,
+            "stitle_x": 0.22,               # Sauver/Options/Photo/Extra.
+            "stitle_s_x": 0.22,             # Même choix en surbrillance.
+            "stitle_g_x": 0.22,             # Même choix désactivé.
+            "stitlesm_x": 0.16,             # Petits sous-titres compacts.
+            "ititle_x": 0.12,               # Statistiques/objectifs/onglets.
+            "ititle_s_x": 0.12,             # Petits textes sélectionnés.
+            "ititle_g_x": 0.12,             # Petits textes désactivés.
+            # Page/Su-Giù/Indietro/Sélectionner.
+            "gdef_w_x": 0.48,
+            # Même bouton sélectionné en orange.
+            "gdef_s_x": 0.55,
+            "gdef_gy_x": 0.48,              # Même bouton grisé/désactivé.
+            "desc_wht_x": 0.38,             # Pourcentage/Évaluation/Temps.
+            "desc_gry_x": 0.38,             # Même texte lorsqu'il est grisé.
+            "description_x1": 280.0,        # Descriptions décalées à droite.
         },
         "de": {
-            "edition": "SLES_526.43", "largeur_menu": 300.0,
-            "pause": (10.0, 310.0), "principal": (161.0, 461.0),
-            "stitle_x": 0.29, "stitle_s_x": 0.29, "stitle_g_x": 0.29,
-            "ititle_x": 0.19, "ititle_s_x": 0.19, "ititle_g_x": 0.19,
-            "description_x1": 280.0,
+            "edition": "SLES_526.43",       # Edition PS2 allemande source.
+            "largeur_menu": 300.0,          # Boutons élargis à 300 pixels.
+            "pause": (10.0, 310.0),         # Menu Pause élargi.
+            "principal": (161.0, 461.0),    # Menu principal élargi.
+            # Titre supérieur droit du Livre noir.
+            "title_x": 0.20,
+            "title_gr_x": 0.20,             # Même titre lorsqu'il est grisé.
+            # Même titre lorsqu'il est sélectionné.
+            "title_s_x": 0.30,
+            "stitle_x": 0.20,               # Choix principaux allemands.
+            "stitle_s_x": 0.20,             # Choix sélectionnés.
+            "stitle_g_x": 0.20,             # Choix désactivés.
+            "stitlesm_x": 0.15,             # Petits sous-titres compacts.
+            "ititle_x": 0.12,               # Statistiques/objectifs/onglets.
+            "ititle_s_x": 0.12,             # Petits textes sélectionnés.
+            "ititle_g_x": 0.12,             # Petits textes désactivés.
+            "gdef_w_x": 0.46,               # Légendes allemandes des touches.
+            "gdef_s_x": 0.53,               # Bouton sélectionné en orange.
+            "gdef_gy_x": 0.46,              # Bouton grisé/désactivé.
+            # Colonne Stats, mots allemands longs.
+            "desc_wht_x": 0.34,
+            "desc_gry_x": 0.34,             # Même texte lorsqu'il est grisé.
+            "description_x1": 280.0,        # Descriptions Livre noir.
         },
         "es": {
-            "edition": "SLES_526.44", "largeur_menu": 300.0,
-            "pause": (10.0, 310.0), "principal": (161.0, 461.0),
-            "stitle_x": 0.29, "stitle_s_x": 0.29, "stitle_g_x": 0.29,
-            "ititle_x": 0.19, "ititle_s_x": 0.19, "ititle_g_x": 0.19,
-            "description_x1": 280.0,
+            "edition": "SLES_526.44",       # Edition PS2 espagnole source.
+            "largeur_menu": 300.0,          # Boutons élargis à 300 pixels.
+            "pause": (10.0, 310.0),         # Menu Pause élargi.
+            "principal": (161.0, 461.0),    # Menu principal élargi.
+            # Titre supérieur droit du Livre noir.
+            "title_x": 0.20,
+            "title_gr_x": 0.20,             # Même titre lorsqu'il est grisé.
+            # Même titre lorsqu'il est sélectionné.
+            "title_s_x": 0.30,
+            "stitle_x": 0.22,               # Choix principaux espagnols.
+            "stitle_s_x": 0.22,             # Choix sélectionnés.
+            "stitle_g_x": 0.22,             # Choix désactivés.
+            "stitlesm_x": 0.16,             # Petits sous-titres compacts.
+            "ititle_x": 0.12,               # Statistiques/objectifs/onglets.
+            "ititle_s_x": 0.12,             # Petits textes sélectionnés.
+            "ititle_g_x": 0.12,             # Petits textes désactivés.
+            "gdef_w_x": 0.48,               # Légendes espagnoles des touches.
+            "gdef_s_x": 0.55,               # Bouton sélectionné en orange.
+            "gdef_gy_x": 0.48,              # Bouton grisé/désactivé.
+            "desc_wht_x": 0.38,             # Porcentaje/Valoración/Tiempo.
+            "desc_gry_x": 0.38,             # Même texte lorsqu'il est grisé.
+            "description_x1": 280.0,        # Descriptions Livre noir.
         },
         "it": {
-            "edition": "SLES_526.45", "largeur_menu": 300.0,
-            "pause": (10.0, 310.0), "principal": (161.0, 461.0),
-            "stitle_x": 0.29, "stitle_s_x": 0.29, "stitle_g_x": 0.29,
-            "ititle_x": 0.19, "ititle_s_x": 0.19, "ititle_g_x": 0.19,
-            "description_x1": 280.0,
+            "edition": "SLES_526.45",       # Edition PS2 italienne source.
+            "largeur_menu": 300.0,          # Boutons élargis à 300 pixels.
+            "pause": (10.0, 310.0),         # Menu Pause élargi.
+            "principal": (161.0, 461.0),    # Menu principal élargi.
+            "title_x": 0.20,                # STATISTICHE en haut à droite.
+            "title_gr_x": 0.20,             # Même titre lorsqu'il est grisé.
+            "title_s_x": 0.30,              # Même titre en surbrillance.
+            "stitle_x": 0.22,               # SALVA PARTITA/OPZIONI/FOTO/EXTRA.
+            "stitle_s_x": 0.22,             # Même choix en surbrillance.
+            "stitle_g_x": 0.22,             # Même choix désactivé.
+            "stitlesm_x": 0.16,             # Petits sous-titres compacts.
+            "ititle_x": 0.12,               # Statistiques/objectifs/onglets.
+            "ititle_s_x": 0.12,             # Petits textes sélectionnés.
+            "ititle_g_x": 0.12,             # Petits textes désactivés.
+            "gdef_w_x": 0.48,               # Indietro/Seleziona/Su-Giù/Page.
+            "gdef_s_x": 0.55,               # Bouton sélectionné en orange.
+            "gdef_gy_x": 0.48,              # Bouton grisé/désactivé.
+            "desc_wht_x": 0.36,             # Percentuale/Valutazione/Tempo.
+            "desc_gry_x": 0.36,             # Même texte lorsqu'il est grisé.
+            "description_x1": 280.0,        # Descriptions Livre noir.
         },
     }
 
@@ -7310,9 +7420,34 @@ def patch_geometrie_v3(data_root):
 
     def sauver(fichier, original, data):
         if data != original:
+            # Les fichiers AUA/JAM utilisent des offsets binaires fixes.
+            # Le moindre octet ajouté ou retiré provoque notamment :
+            # "Control\\PCAssets.AUA: line 1 - syntax error".
+            if len(data) != len(original):
+                raise RuntimeError(
+                    f"[GEOMETRIE SECURITE] {fichier.name} : taille modifiee "
+                    f"({len(original)} -> {len(data)} octets). "
+                    "Ecriture annulee pour ne pas corrompre PCAssets.AUA."
+                )
             fichier.write_bytes(data)
             return True
         return False
+
+    def encoder_nombre_meme_taille(ancien, cible):
+        """Encode un nombre sans ajouter ni retirer le moindre octet."""
+        taille = len(ancien)
+
+        # Conserve autant de décimales que le champ d'origine le permet.
+        # Exemple : 0.35 -> 0.22 ; 0.505 -> 0.340 ; 0.4 -> 0.3.
+        for decimales in range(max(0, taille - 2), -1, -1):
+            candidat = f"{float(cible):.{decimales}f}".encode("ascii")
+            if len(candidat) <= taille:
+                return candidat.ljust(taille, b" ")
+
+        raise RuntimeError(
+            f"Valeur Scale {cible!r} impossible a encoder dans "
+            f"{taille} octet(s)."
+        )
 
     def remplacer_style(data, nom, cible_x, etiquette):
         motif = re.compile(
@@ -7330,15 +7465,22 @@ def patch_geometrie_v3(data_root):
             print("[AMBIGU]", etiquette, ":", len(matches))
             return data
         m = matches[0]
-        nouvelle_x = fmt(cible_x).encode("ascii")
-        if m.group(2) == nouvelle_x:
+        ancienne_x = m.group(2)
+        nouvelle_x = encoder_nombre_meme_taille(ancienne_x, cible_x)
+        if ancienne_x == nouvelle_x.rstrip():
             compteurs["DEJA_OK"] += 1
-            print("[DEJA_OK]", etiquette, "=", nouvelle_x.decode())
+            print("[DEJA_OK]", etiquette, "=", ancienne_x.decode())
             return data
         remplacement = m.group(1) + nouvelle_x + m.group(3) + m.group(4)
+        if len(remplacement) != len(m.group(0)):
+            raise RuntimeError(
+                f"[GEOMETRIE SECURITE] {etiquette} : remplacement "
+                "de taille differente refuse."
+            )
         compteurs["PATCH"] += 1
         print("[PATCH]", etiquette, m.group(
-            2).decode(), "->", nouvelle_x.decode())
+            2).decode(), "->", nouvelle_x.decode().strip(),
+            "(taille binaire conservee)")
         return data[:m.start()] + remplacement + data[m.end():]
 
     def remplacer_dans_namespace(data, namespace, ancien, nouveau, attendu, etiquette):
@@ -7478,10 +7620,30 @@ def patch_geometrie_v3(data_root):
     if app.exists():
         original = app.read_bytes()
         data = original
+        # On ne modifie que Scale X : le texte est condensé horizontalement
+        # sans changer sa hauteur, sa ligne de base ni l'espacement vertical.
+        # Les styles sont traités séparément car ils n'ont pas le même rôle :
+        # grands titres, choix de menu, petits libellés et aides de touches.
         for nom, cible_x in (
-            ("STITLE", p["stitle_x"]), ("STITLE_S", p["stitle_s_x"]),
-            ("STITLE_G", p["stitle_g_x"]), ("ITITLE", p["ititle_x"]),
-            ("ITITLE_S", p["ititle_s_x"]), ("ITITLE_G", p["ititle_g_x"]),
+            ("TITLE", p["title_x"]),
+            ("TITLE_GR", p["title_gr_x"]),
+            ("TITLE_S", p["title_s_x"]),
+            ("STITLE", p["stitle_x"]),
+            ("STITLE_S", p["stitle_s_x"]),
+            ("STITLE_G", p["stitle_g_x"]),
+            ("STITLESM", p["stitlesm_x"]),
+            ("ITITLE", p["ititle_x"]),
+            ("ITITLE_S", p["ititle_s_x"]),
+            ("ITITLE_G", p["ititle_g_x"]),
+            # TextCC et MouseBx utilisent réellement ces polices sur PC.
+            # GDEF_CON appartient à la PS2 et n'existe pas dans AppInit PC.
+            ("GDEF_W", p["gdef_w_x"]),
+            ("GDEF_S", p["gdef_s_x"]),
+            ("GDEF_GY", p["gdef_gy_x"]),
+            # La page Statistiques n'utilise pas ITITLE pour sa colonne
+            # droite : les libellés et valeurs passent par DESC_WHT/GRY.
+            ("DESC_WHT", p["desc_wht_x"]),
+            ("DESC_GRY", p["desc_gry_x"]),
         ):
             data = remplacer_style(
                 data, nom, cible_x, f"{langue.upper()} {nom}")
@@ -11722,7 +11884,7 @@ def analyser_adaptations_console_vers_pc(resultat_textes, resultat_tri,
             return texte
 
         if [m.group(0).casefold() for m in trouvees
-                ] != [variable.casefold() for variable in variables_pc]:
+            ] != [variable.casefold() for variable in variables_pc]:
             return texte
 
         morceaux = []
