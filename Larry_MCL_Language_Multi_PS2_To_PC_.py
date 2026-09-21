@@ -7194,210 +7194,5857 @@ def traduire_autres_jam(data_root, ps2_index):
     return (total_fichiers, total_chaines)
 
 
+RECTANGLES_GLOBAUX = [
+    # Livre noir : agrandir vers la gauche le rectangle vleu de fond
+    (
+        b"Rectangle 64.0 63.0 576.0 407.0",
+        b"Rectangle 42.0 63.0 576.0 407.0",
+    ),
+
+    # prochains réglages .
+]
+
+
+def generer_guide_geometrie():
+    """
+    Génère le tutoriel complet de réglage géométrique à la racine du script.
+    Cette fonction ne modifie aucun fichier JAM.
+    """
+    from pathlib import Path
+
+    fichier = Path(__file__).resolve().parent / "GUIDE_GEOMETRIE_LARRY_MCL.txt"
+    contenu = '==============================================================================\n GUIDE PROFESSIONNEL DE RÉGLAGE GÉOMÉTRIQUE\n LEISURE SUIT LARRY: MAGNA CUM LAUDE - LOCALISATION PS2 -> PC\n==============================================================================\n\nBUT DU GUIDE\n============\n\nCe document sert de manuel de réglage pour les rectangles de l\'interface.\nIl explique COMMENT lire une coordonnée, COMMENT déplacer ou redimensionner\nun élément et COMMENT retrouver le paramètre correspondant dans\npatch_geometrie_v3().\n\nIMPORTANT :\n- L\'architecture utilisée ici est VISUELLE : on classe un élément là où il\n  apparaît à l\'écran.\n- EN / FR / DE / ES / IT possèdent leurs propres valeurs.\n- Les 5 grands titres du Livre noir sont indépendants.\n- Un rectangle règle une ZONE. La taille de la police est un autre réglage.\n\n\n==============================================================================\n 1 - COMPRENDRE RECTANGLE X1 Y1 X2 Y2\n==============================================================================\n\nLe moteur utilise :\n\n    Rectangle X1 Y1 X2 Y2\n\n                 axe X : gauche -> droite\n                         +--------------------->\n\n                   X1                      X2\n                    |                       |\n                    v                       v\n              Y1 -> +-----------------------+\n                    |                       |\n                    |       RECTANGLE       |\n                    |                       |\n              Y2 -> +-----------------------+\n\n                    ^\n                    |\n              axe Y : haut -> bas\n\n\nX1 = bord GAUCHE\nY1 = bord HAUT\nX2 = bord DROIT\nY2 = bord BAS\n\nATTENTION :\nDans cette interface, quand Y augmente, on descend à l\'écran.\n\n\n==============================================================================\n 2 - LARGEUR ET HAUTEUR\n==============================================================================\n\n    LARGEUR = X2 - X1\n    HAUTEUR = Y2 - Y1\n\nExemple :\n\n    Rectangle 280.0 -40.0 460.0 10.0\n\nLargeur :\n    460 - 280 = 180\n\nHauteur :\n    10 - (-40) = 50\n\n\n==============================================================================\n 3 - AGRANDIR UN RECTANGLE\n==============================================================================\n\nAGRANDIR VERS LA GAUCHE\n-----------------------\n\nAVANT :\n             +------------------+\n             |                  |\n             +------------------+\n\nAPRÈS :\n       +------------------------+\n       |                        |\n       +------------------------+\n\n=> X1 DIMINUE.\n\nExemple :\n    X1 : 64.0 -> 52.0\n    gain : 12 unités vers la gauche.\n\n\nAGRANDIR VERS LA DROITE\n-----------------------\n\nAVANT :\n       +------------------+\n\nAPRÈS :\n       +----------------------------+\n\n=> X2 AUGMENTE.\n\n\nAGRANDIR VERS LE HAUT\n---------------------\n\n=> Y1 DIMINUE.\n\n\nAGRANDIR VERS LE BAS\n--------------------\n\n=> Y2 AUGMENTE.\n\n\n==============================================================================\n 4 - RÉTRÉCIR UN RECTANGLE\n==============================================================================\n\nDepuis la GAUCHE  : X1 AUGMENTE\nDepuis la DROITE  : X2 DIMINUE\nDepuis le HAUT    : Y1 AUGMENTE\nDepuis le BAS     : Y2 DIMINUE\n\n\n==============================================================================\n 5 - DÉPLACER SANS CHANGER LA TAILLE\n==============================================================================\n\nGAUCHE :\n    X1 diminue\n    X2 diminue\n    de la MÊME valeur.\n\nDROITE :\n    X1 augmente\n    X2 augmente\n    de la MÊME valeur.\n\nHAUT :\n    Y1 diminue\n    Y2 diminue\n    de la MÊME valeur.\n\nBAS :\n    Y1 augmente\n    Y2 augmente\n    de la MÊME valeur.\n\n\nExemple :\n\nAVANT :\n    (280.0, -40.0, 460.0, 10.0)\n\n10 unités vers la gauche :\n\nAPRÈS :\n    (270.0, -40.0, 450.0, 10.0)\n\nLa largeur reste 180.\n\n\n==============================================================================\n 6 - NE DÉPLACER QU\'UN BORD\n==============================================================================\n\nModifier uniquement X1 :\n    change le bord GAUCHE.\n\nModifier uniquement X2 :\n    change le bord DROIT.\n\nModifier uniquement Y1 :\n    change le bord HAUT.\n\nModifier uniquement Y2 :\n    change le bord BAS.\n\nExemple :\n\n    (64, 63, 576, 407)\n         |\n         +-- X1 = 64\n\ndevient :\n\n    (52, 63, 576, 407)\n\nSeul le bord gauche bouge.\nLe rectangle devient 12 unités plus large.\n\n\n==============================================================================\n 7 - REPÈRE VISUEL DU LIVRE NOIR\n==============================================================================\n\n    +------------------------------------------------------------------+\n    | [AND] [FILLES] [TENU] [OBJETS] [STATS]                           |\n    |                                                                  |\n    |                               +----------------------+  +------+  |\n    |                               | GRAND TITRE          |  | ICON |  |\n    |                               +----------------------+  +------+  |\n    |                                                                  |\n    | +------------------------+    +-------------------------------+   |\n    | |                        |    | SOUS-TITRE                    |   |\n    | | LISTE GAUCHE           |    +-------------------------------+   |\n    | |                        |    |                               |   |\n    | |                        |    | DESCRIPTION / DÉTAIL DROIT    |   |\n    | |                        |    |                               |   |\n    | +------------------------+    +-------------------------------+   |\n    |                                                                  |\n    | +--------------------------------------------------------------+ |\n    | |                 AIDE BOUTTON EN BAS                          | |\n    | +--------------------------------------------------------------+ |\n    +------------------------------------------------------------------+\n\n\n==============================================================================\n 8 - LES 5 TITRES DU LIVRE NOIR SONT INDÉPENDANTS\n==============================================================================\n\nET MAINTENANT :\n    quete_titre_rectangle\n    quete_titre_icone_rectangle\n\nFILLES :\n    fille_titre_rectangle\n    fille_titre_icone_rectangle\n\nTENU :\n    tenue_titre_rectangle\n    tenue_titre_icone_rectangle\n\nOBJETS :\n    objet_titre_rectangle\n    objet_titre_icone_rectangle\n\nSTATISTIQUES :\n    stats_titre_rectangle\n    stats_titre_icone_rectangle\n\n\nPourquoi ?\n\nParce que les mots n\'ont pas la même longueur.\n\n    TENU\n    FILLES\n    OBJETS\n    ET MAINTENANT\n    STATISTIQUES\n\nIl ne faut donc PAS déplacer ou redimensionner les cinq titres ensemble.\n\nChaque langue peut également nécessiter des valeurs différentes :\n\n    EN\n    FR\n    DE\n    ES\n    IT\n\n\n==============================================================================\n 9 - EXEMPLE : RÉGLER UNIQUEMENT STATISTIQUES\n==============================================================================\n\nValeur de départ :\n\n    "stats_titre_rectangle": (280.0, -40.0, 460.0, 10.0)\n\nPour gagner 30 unités à gauche sans déplacer le bord droit :\n\n    "stats_titre_rectangle": (250.0, -40.0, 460.0, 10.0)\n\nRésultat :\n\n       AVANT\n             +--------------------+\n             |   STATISTIQUES     |\n             +--------------------+\n\n       APRÈS\n       +--------------------------+\n       |      STATISTIQUES        |\n       +--------------------------+\n\nSeul STATISTIQUES doit être concerné.\n\n\n==============================================================================\n 10 - TITRE, ICÔNE, SOUS-TITRE ET DESCRIPTION : NE PAS CONFONDRE\n==============================================================================\n\n             +----------------------+  +------+\n             | TITRE                |  | ICON |\n             +----------------------+  +------+\n\n             +-----------------------------+\n             | SOUS-TITRE                  |\n             +-----------------------------+\n\n             +-----------------------------+\n             |                             |\n             | DESCRIPTION                 |\n             |                             |\n             +-----------------------------+\n\nExemple AND NOW :\n\nTITRE :\n    quete_titre_rectangle\n\nICÔNE :\n    quete_titre_icone_rectangle\n\nSOUS-TITRE AU-DESSUS DE LA DESCRIPTION :\n    quete_sous_titre_rectangle\n\nDESCRIPTION :\n    quete_description_rectangle\n\nCes quatre zones sont différentes.\n\n\n==============================================================================\n 11 - TENU : ATTENTION AU SOUS-TITRE ACCESSOIRES\n==============================================================================\n\nLe grand titre TENU et le sous-titre ACCESSOIRES ne sont PAS le même élément.\n\nGRAND TITRE :\n    tenue_titre_rectangle\n\nICÔNE DU GRAND TITRE :\n    tenue_titre_icone_rectangle\n\nSOUS-TITRE ACCESSOIRES dans le corps droit :\n    tenue_sous_titre_rectangle\n\n\n==============================================================================\n 12 - LISTES ET SCROLL\n==============================================================================\n\nSchéma :\n\n       [ ^ ]  <- scroll haut\n\n       +-----------------------+\n       | entrée 1              |\n       | entrée 2              |\n       | entrée 3              |\n       | entrée 4              |\n       +-----------------------+\n\n       [ v ]  <- scroll bas\n\nUne liste possède généralement :\n- son rectangle principal ;\n- éventuellement une flèche HAUT ;\n- éventuellement une flèche BAS ;\n- des rectangles internes pour les lignes, icônes ou textes.\n\n\n==============================================================================\n 13 - AIDE BOUTTON EN BAS\n==============================================================================\n\nExemple visuel :\n\n    +----------------+----------------+----------------+\n    | PAGE / ACTION  | HAUT / BAS     | RETOUR         |\n    +----------------+----------------+----------------+\n\nCertains écrans utilisent 3 zones.\nD\'autres en utilisent 4.\n\nNe pas supposer qu\'un réglage d\'aide est commun à tous les écrans.\n\n\n==============================================================================\n 14 - SÉCURITÉ DES FICHIERS JAM\n==============================================================================\n\nLes fichiers JAM peuvent utiliser une organisation binaire dans laquelle\nla longueur des données doit rester stable.\n\nLe patch actuel refuse un remplacement si sa représentation texte devient\nplus longue que la place disponible.\n\nExemple :\n\n    ancien :\n    Rectangle 280.0 -40.0 460.0 10.0\n\nSi la nouvelle chaîne ne tient pas dans l\'espace disponible :\n\n    [REFUSE TAILLE]\n\nC\'est une PROTECTION.\n\nNe pas contourner cette sécurité simplement en supprimant le contrôle.\n\n\n==============================================================================\n 15 - COMPRENDRE LES MESSAGES DU PATCH\n==============================================================================\n\n[PATCH]\n    La cible a été trouvée et modifiée.\n\n[DEJA_OK]\n    La valeur souhaitée est déjà présente.\n\n[INTROUVABLE]\n    La cible ou le namespace attendu n\'a pas été trouvé.\n\n[AMBIGU]\n    Le moteur ne peut pas déterminer de façon suffisamment sûre\n    quelle occurrence doit être modifiée.\n\n[REFUSE TAILLE]\n    La nouvelle représentation ne tient pas dans la taille disponible.\n\n\n==============================================================================\n 16 - MÉTHODE DE TRAVAIL CONSEILLÉE\n==============================================================================\n\n1. Choisir la LANGUE à régler.\n2. Identifier visuellement la zone incorrecte.\n3. Retrouver la branche correspondante dans le profil.\n4. Modifier UNE seule valeur.\n5. Lancer le patch.\n6. Lire les logs.\n7. Lancer le jeu.\n8. Comparer visuellement.\n9. Ajuster progressivement.\n10. Une fois validé, passer à la zone suivante.\n\nPour comprendre un déplacement, utiliser de petites valeurs :\n    2, 5 ou 10 unités.\n\nCela permet de voir immédiatement dans quelle direction agit le paramètre.\n\n\n==============================================================================\n 17 - EXEMPLES RAPIDES\n==============================================================================\n\nDéplacer de 5 vers la droite :\n\n    (X1 + 5, Y1, X2 + 5, Y2)\n\nDéplacer de 5 vers la gauche :\n\n    (X1 - 5, Y1, X2 - 5, Y2)\n\nDéplacer de 5 vers le bas :\n\n    (X1, Y1 + 5, X2, Y2 + 5)\n\nDéplacer de 5 vers le haut :\n\n    (X1, Y1 - 5, X2, Y2 - 5)\n\nAgrandir de 10 uniquement à droite :\n\n    (X1, Y1, X2 + 10, Y2)\n\nAgrandir de 10 uniquement à gauche :\n\n    (X1 - 10, Y1, X2, Y2)\n\nAgrandir de 10 en haut :\n\n    (X1, Y1 - 10, X2, Y2)\n\nAgrandir de 10 en bas :\n\n    (X1, Y1, X2, Y2 + 10)\n\n\n==============================================================================\n 18 - MÉMO ULTRA RAPIDE\n==============================================================================\n\nAGRANDIR :\n    gauche  -> X1 -\n    droite  -> X2 +\n    haut    -> Y1 -\n    bas     -> Y2 +\n\nRÉTRÉCIR :\n    gauche  -> X1 +\n    droite  -> X2 -\n    haut    -> Y1 +\n    bas     -> Y2 -\n\nDÉPLACER :\n    gauche  -> X1 - ET X2 -\n    droite  -> X1 + ET X2 +\n    haut    -> Y1 - ET Y2 -\n    bas     -> Y1 + ET Y2 +\n\nDIMENSIONS :\n    largeur = X2 - X1\n    hauteur = Y2 - Y1\n\n\n==============================================================================\n 19 - RÈGLE ESSENTIELLE DU PROJET\n==============================================================================\n\nL\'EMPLACEMENT VISUEL À L\'ÉCRAN DÉTERMINE LE CLASSEMENT DANS LE PROFIL.\n\nLes noms techniques JAM servent à retrouver la cible dans le fichier,\nmais ne doivent pas casser l\'organisation visuelle du guide et des profils.\n\n==============================================================================\n\n\n==============================================================================\n 20 - INVENTAIRE DES PARAMÈTRES RACCORDÉS DANS CETTE VERSION\n==============================================================================\n\n\nMENU PRINCIPAL\n--------------\n\n    menu_principal_rectangle\n    menu_principal_nouvelle_partie_rectangle\n    menu_principal_charger_rectangle\n    menu_principal_quitter_rectangle\n    menu_principal_texte_demarrer_rectangle\n\n\nMENU PAUSE\n----------\n\n    menu_pause_ecran_rectangle\n    menu_pause_liste_rectangle\n    menu_pause_bouton_1_rectangle\n    menu_pause_bouton_2_rectangle\n    menu_pause_bouton_3_rectangle\n    menu_pause_bouton_4_rectangle\n    menu_pause_bouton_5_rectangle\n    menu_pause_bouton_6_rectangle\n    menu_pause_aide_haut_bas_rectangle\n    menu_pause_aide_retour_rectangle\n    menu_pause_aide_selection_rectangle\n\n\nLIVRE NOIR - GLOBAL\n-------------------\n\n    livre_noir_fond_rectangle\n    onglet_quete_inactif_rectangle\n    onglet_filles_inactif_rectangle\n    onglet_tenue_inactif_rectangle\n    onglet_objet_inactif_rectangle\n    onglet_stats_inactif_rectangle\n    livre_noir_item_rectangle\n    livre_noir_item_icone_rectangle\n    livre_noir_item_texte_marge_rectangle\n\n\nLIVRE NOIR - AND NOW\n--------------------\n\n    quete_titre_rectangle\n    quete_titre_icone_rectangle\n    quete_onglet_actif_rectangle\n    quete_liste_rectangle\n    quete_description_rectangle\n    quete_sous_titre_rectangle\n    quete_scroll_haut_rectangle\n    quete_scroll_bas_rectangle\n    quete_aide_page_rectangle\n    quete_aide_haut_bas_rectangle\n    quete_aide_retour_rectangle\n\n\nLIVRE NOIR - FILLES\n-------------------\n\n    fille_titre_rectangle\n    fille_titre_icone_rectangle\n    fille_onglet_actif_rectangle\n    fille_liste_rectangle\n    fille_image_principale_rectangle\n    fille_texte_milieu_rectangle\n    fille_icone_rectangle\n    fille_token_texte_rectangle\n    fille_scroll_haut_rectangle\n    fille_scroll_bas_rectangle\n    fille_aide_page_rectangle\n    fille_aide_haut_bas_rectangle\n    fille_aide_selection_rectangle\n    fille_aide_retour_rectangle\n    fille_historique_fond_rectangle\n    fille_historique_titre_rectangle\n    fille_historique_image_rectangle\n    fille_historique_liste_titre_rectangle\n    fille_historique_liste_rectangle\n    fille_historique_scroll_haut_rectangle\n    fille_historique_scroll_bas_rectangle\n\n\nLIVRE NOIR - TENU\n-----------------\n\n    tenue_titre_rectangle\n    tenue_titre_icone_rectangle\n    tenue_onglet_actif_rectangle\n    tenue_liste_rectangle\n    tenue_sous_titre_rectangle\n    tenue_accessoire_1_rectangle\n    tenue_accessoire_2_rectangle\n    tenue_accessoire_3_rectangle\n    tenue_accessoire_4_rectangle\n    tenue_scroll_haut_rectangle\n    tenue_scroll_bas_rectangle\n\n\nLIVRE NOIR - ONJETS / OBJETS\n----------------------------\n\n    objet_titre_rectangle\n    objet_titre_icone_rectangle\n    objet_onglet_actif_rectangle\n    objet_liste_rectangle\n    objet_image_rectangle\n    objet_description_rectangle\n    objet_scroll_haut_rectangle\n    objet_scroll_bas_rectangle\n    objet_aide_page_rectangle\n    objet_aide_haut_bas_rectangle\n    objet_aide_detail_rectangle\n    objet_aide_retour_rectangle\n\n\nLIVRE NOIR - STATISTIQUES\n-------------------------\n\n    stats_titre_rectangle\n    stats_titre_icone_rectangle\n    stats_onglet_actif_rectangle\n    stats_liste_gauche_rectangle\n    stats_item_gauche_rectangle\n    stats_liste_droite_rectangle\n    stats_item_droite_rectangle\n    stats_scroll_haut_rectangle\n    stats_scroll_bas_rectangle\n    stats_aide_page_rectangle\n    stats_aide_haut_bas_rectangle\n    stats_aide_retour_rectangle\n\n\nOPTIONS\n-------\n\n    option_ecran_rectangle\n    option_liste_rectangle\n    option_item_rectangle\n    option_aide_haut_bas_rectangle\n    option_aide_retour_rectangle\n    option_aide_selection_rectangle\n    audio_ecran_rectangle\n    audio_liste_rectangle\n    audio_item_rectangle\n    audio_fleche_gauche_1_rectangle\n    audio_fleche_gauche_2_rectangle\n    audio_fleche_gauche_3_rectangle\n    audio_fleche_droite_1_rectangle\n    audio_fleche_droite_2_rectangle\n    audio_fleche_droite_3_rectangle\n    audio_aide_gauche_droite_rectangle\n    audio_aide_retour_rectangle\n    audio_aide_selection_rectangle\n    controleur_ecran_rectangle\n    controleur_liste_rectangle\n    controleur_item_rectangle\n    controleur_aide_haut_bas_rectangle\n    controleur_aide_cycle_rectangle\n    controleur_aide_retour_rectangle\n    controleur_aide_selection_rectangle\n    vibration_ecran_rectangle\n    vibration_liste_rectangle\n    vibration_item_rectangle\n    vibration_fleche_gauche_rectangle\n    vibration_fleche_droite_rectangle\n    vibration_aide_gauche_droite_rectangle\n    vibration_aide_retour_rectangle\n    vibration_aide_selection_rectangle\n    difficulte_ecran_rectangle\n    difficulte_liste_rectangle\n    difficulte_item_rectangle\n    difficulte_fleche_gauche_rectangle\n    difficulte_fleche_droite_rectangle\n    difficulte_aide_gauche_droite_rectangle\n    difficulte_aide_retour_rectangle\n    difficulte_aide_selection_rectangle\n\n\nPHOTO\n-----\n\n    photo_menu_ecran_rectangle\n    photo_menu_liste_rectangle\n    photo_menu_item_rectangle\n    photo_menu_aide_haut_bas_rectangle\n    photo_menu_aide_retour_rectangle\n    photo_menu_aide_selection_rectangle\n    photo_album_ecran_rectangle\n    photo_album_titre_rectangle\n    photo_album_scroll_gauche_rectangle\n    photo_album_scroll_droite_rectangle\n    photo_album_scroll_haut_rectangle\n    photo_album_scroll_bas_rectangle\n    photo_album_photo_1_rectangle\n    photo_album_photo_2_rectangle\n    photo_album_photo_3_rectangle\n    photo_album_photo_4_rectangle\n    photo_album_photo_5_rectangle\n    photo_album_photo_6_rectangle\n    photo_album_aide_navigation_rectangle\n    photo_album_aide_zoom_rectangle\n    photo_album_aide_retour_rectangle\n\n\nEXTRA\n-----\n\n    extra_ecran_rectangle\n    extra_liste_rectangle\n    extra_item_rectangle\n    extra_aide_haut_bas_rectangle\n    extra_aide_retour_rectangle\n    extra_aide_selection_rectangle\n    bonus_ecran_rectangle\n    bonus_liste_rectangle\n    bonus_item_rectangle\n    bonus_aide_gauche_droite_rectangle\n    bonus_aide_retour_rectangle\n    bonus_aide_selection_rectangle\n\n\n==============================================================================\n 21 - FICHE DE TEST À UTILISER\n==============================================================================\n\nLANGUE :\n    EN / FR / DE / ES / IT\n\nÉCRAN :\n    ___________________________________________\n\nÉLÉMENT :\n    ___________________________________________\n\nPARAMÈTRE :\n    ___________________________________________\n\nAVANT :\n    (________, ________, ________, ________)\n\nAPRÈS :\n    (________, ________, ________, ________)\n\nEFFET RECHERCHÉ :\n    [ ] gauche\n    [ ] droite\n    [ ] haut\n    [ ] bas\n    [ ] plus large\n    [ ] moins large\n    [ ] plus haut\n    [ ] moins haut\n\nRÉSULTAT DANS LE JEU :\n    ___________________________________________\n    ___________________________________________\n\n\n==============================================================================\n FIN DU GUIDE\n==============================================================================\n\nConseil final :\nModifier un paramètre à la fois et conserver les valeurs qui donnent un\nrésultat validé dans le jeu. Cela rend le diagnostic beaucoup plus simple.\n'
+
+    fichier.write_text(contenu, encoding="utf-8")
+
+    print("=" * 70)
+    print("[GUIDE GEOMETRIE] Tutoriel généré :", fichier)
+    print("=" * 70)
+
+    return fichier
+
+
 def patch_geometrie_v3(data_root):
     """
-    Géométrie PC par édition PS2.
+    Géométrie PC entièrement réglable PAR LANGUE : EN / FR / DE / ES / IT.
 
-    SLES_526.41 = EN
-    SLES_526.42 = FR
-    SLES_526.43 = DE
-    SLES_526.44 = ES
-    SLES_526.45 = IT
+    Cette version conserve le nom patch_geometrie_v3() pour ne casser aucun appel.
+    Tous les réglages visibles sont regroupés dans `profils` et séparés par menu,
+    sous-menu et onglet. Pour modifier une langue, modifier UNIQUEMENT son bloc.
 
-    IMPORTANT :
-    - le nom de la fonction V3 est conservé pour ne casser aucun appel ;
-    - les réglages FR déjà présents sont conservés sans changement ;
-    - chaque langue possède ses propres valeurs ;
-    - REGLAGES_GEOMETRIE_MANUELS permet de régler un champ précis sans
-      effectuer de remplacement global ;
-    - champs réglables : Rectangle, Position, Scale, Name, NameSpace, Style ;
-    - ciblage possible : fichier JAM + NameSpace + Name + occurrence ;
-    - une règle inactive ne modifie absolument rien ;
-    - les corrections restent idempotentes pour permettre les tests/reboots.
+    Sécurité : aucun fichier JAM n'est écrit si sa taille binaire change.
     """
     data_root = Path(data_root)
     pc_root = data_root / "JamFiles" / "PC"
     langue = normaliser_code_langue(LANGUE_CIBLE)
 
     # ============================================================
-    # PROFILS D'AFFICHAGE PAR LANGUE
+    # PROFILS COMPLETS PAR LANGUE
     # ============================================================
-    # IMPORTANT : les valeurs *_x modifient UNIQUEMENT la largeur du texte.
-    # Plus la valeur est petite, plus le texte est étroit et tient facilement
-    # dans son cadre. La hauteur Y d'origine est conservée par le moteur.
-    #
-    # largeur_menu  : largeur des boutons des menus Pause et Principal.
-    # pause         : position gauche et droite du panneau du menu Pause.
-    # principal     : position gauche et droite du menu de démarrage.
-    # title_x       : grands titres du Livre noir et des fenêtres.
-    # title_gr_x    : même titre lorsqu'il est grisé/désactivé.
-    # title_s_x     : même titre lorsqu'il est sélectionné/en surbrillance.
-    # stitle_x      : choix principaux (Sauver, Options, Photo, Extra...).
-    # stitle_s_x    : choix principal actuellement sélectionné.
-    # stitle_g_x    : choix principal grisé/désactivé.
-    # stitlesm_x    : petits sous-titres et variantes compactes.
-    # ititle_x      : textes des onglets, statistiques et objectifs du Livre noir.
-    # ititle_s_x    : même petit texte lorsqu'il est sélectionné.
-    # ititle_g_x    : même petit texte lorsqu'il est grisé/désactivé.
-    # gdef_w_x      : texte blanc des boutons/aides (TextCC et MouseBx).
-    # gdef_s_x      : texte orange du bouton actuellement sélectionné.
-    # gdef_gy_x     : texte des boutons grisés ou indisponibles.
-    # desc_wht_x    : texte blanc de la colonne droite des statistiques
-    #                 (Percentuale completata, Valutazione, Tempo et valeurs).
-    # desc_gry_x    : même colonne lorsqu'un texte est affiché en gris.
-    # description_x1: bord gauche des descriptions du Livre noir ; une valeur
-    #                 plus grande décale la description vers la droite.
+    # Rectangle = (X1, Y1, X2, Y2)
+    # X1 plus petit : étend/déplace vers la gauche.
+    # X2 plus grand : étend/déplace vers la droite.
+    # Y1 plus petit : étend/déplace vers le haut.
+    # Y2 plus grand : étend/déplace vers le bas.
+    # Les valeurs ci-dessous partent de la géométrie PC relevée dans les rapports,
+    # sauf les corrections de langue déjà présentes dans ton V3 qui sont conservées.
     profils = {
         "en": {
-            "edition": "SLES_526.41",       # Edition PS2 anglaise source.
-            "largeur_menu": 220.0,          # Largeur originale des boutons.
-            "pause": (50.0, 270.0),         # Panneau Pause original.
-            "principal": (201.0, 421.0),    # Menu principal original.
-            "title_x": 0.40,                # Grands titres.
-            "title_gr_x": 0.40,             # Grands titres désactivés.
-            "title_s_x": 0.505,             # Grands titres sélectionnés.
-            "stitle_x": 0.35,               # Choix principaux.
-            "stitle_s_x": 0.35,             # Choix sélectionnés.
-            "stitle_g_x": 0.35,             # Choix désactivés.
-            "stitlesm_x": 0.20,             # Petits sous-titres.
-            "ititle_x": 0.22,               # Onglets/statistiques/objectifs.
-            "ititle_s_x": 0.22,             # Petits textes sélectionnés.
-            "ititle_g_x": 0.22,             # Petits textes désactivés.
-            "gdef_w_x": 0.65,               # Boutons/aides blancs d'origine.
-            "gdef_s_x": 0.755,              # Bouton orange sélectionné.
-            "gdef_gy_x": 0.65,              # Boutons grisés d'origine.
-            "desc_wht_x": 0.53,             # Colonne droite Stats d'origine.
-            "desc_gry_x": 0.53,             # Colonne Stats grisée d'origine.
-            # Début des descriptions Livre noir.
-            "description_x1": 261.0,
+
+            # =====================
+            # LANGUE
+            # =====================
+
+            "edition": "SLES_526.41",  # Edition PS2 source pour ce profil.
+
+
+            # =====================
+            # MENU PRINCIPAL  GLOBAL
+            # =====================
+
+            "menu_principal_rectangle": (201.0, 250.0, 421.0, 355.0),
+            # > Zone complète du menu principal. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (201.0, 250.0, 421.0, 355.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > NOUVELLE PARTIE
+            # =====================
+
+            "menu_principal_nouvelle_partie_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Position/taille du bouton NOUVELLE PARTIE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+            "menu_principal_texte_demarrer_rectangle": (84.0, 285.0, 576.0, 320.0),
+            # > Zone du texte/indication de démarrage. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (84.0, 285.0, 576.0, 320.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > CHARGER
+            # =====================
+
+            "menu_principal_charger_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Position/taille du bouton CHARGER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > QUITTER
+            # =====================
+
+            "menu_principal_quitter_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Position/taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PAUSE > GLOBAL
+            # =====================
+
+            "menu_pause_ecran_rectangle": (160.0, 101.0, 480.0, 379.0),
+            # > Zone écran du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (160.0, 101.0, 480.0, 379.0)
+
+            "menu_pause_liste_rectangle": (50.0, 32.0, 270.0, 243.0),
+            # > Zone contenant les 6 choix du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (50.0, 32.0, 270.0, 243.0)
+
+
+            # =====================
+            # MENU PAUSE > LIVRE NOIR
+            # =====================
+
+            "menu_pause_bouton_1_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Taille du bouton LIVRE NOIR. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > SAUVEGARDE
+            # =====================
+
+            "menu_pause_bouton_2_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Taille du bouton SAUVEGARDE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > OPTION
+            # =====================
+
+            "menu_pause_bouton_3_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Taille du bouton OPTION. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > PHOTO
+            # =====================
+
+            "menu_pause_bouton_4_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Taille du bouton PHOTO. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > EXTRA
+            # =====================
+
+            "menu_pause_bouton_5_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Taille du bouton EXTRA. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > QUITTER
+            # =====================
+
+            "menu_pause_bouton_6_rectangle": (0.0, 0.0, 220.0, 35.0),
+            # > Taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "menu_pause_aide_haut_bas_rectangle": (-80.0, 288.0, 86.0, 318.0),
+            # > Zone aide HAUT/BAS. Format : Rectangle.
+            # > Valeur de départ EN : (-80.0, 288.0, 86.0, 318.0)
+
+            "menu_pause_aide_retour_rectangle": (87.0, 288.0, 233.0, 318.0),
+            # > Zone aide RETOUR. Format : Rectangle.
+            # > Valeur de départ EN : (87.0, 288.0, 233.0, 318.0)
+
+            "menu_pause_aide_selection_rectangle": (234.0, 288.0, 400.0, 318.0),
+            # > Zone aide SÉLECTION. Format : Rectangle.
+            # > Valeur de départ EN : (234.0, 288.0, 400.0, 318.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU LIVRE NOIR > GLOBAL
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR GLOBAL FOND RECTANGLE BLEU
+            # =====================
+
+            "livre_noir_fond_rectangle": (64.0, 63.0, 576.0, 407.0),
+            # > Fond/zone principale bleue du Livre noir. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ EN : (64.0, 63.0, 576.0, 407.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS >
+            # =====================
+
+            "livre_noir_item_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une entrée générique des listes Livre noir ; hauteur = pas vertical de base. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 234.0, 28.0)
+
+            "livre_noir_item_icone_rectangle": (0.0, 4.0, 20.0, 24.0),
+            # > Zone de l’icône interne d’une entrée de liste. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 4.0, 20.0, 24.0)
+
+            "livre_noir_item_texte_marge_rectangle": (25.0, 0.0, 25.0, 0.0),
+            # > Marge/zone interne du texte d’une entrée ; 25.0 réserve la place de l’icône. Format : Rectangle.
+            # > Valeur de départ EN : (25.0, 0.0, 25.0, 0.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON ACTIVE HAUT GAUCHE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON INACTIVE HAUT GAUCHE
+            # =====================
+
+            "onglet_quete_inactif_rectangle": (55.0, -29.0, 83.0, 2.0),
+            # > Icône onglet AND NOW inactif. Format : Rectangle.
+            # > Valeur de départ EN : (55.0, -29.0, 83.0, 2.0)
+
+            "onglet_filles_inactif_rectangle": (87.0, -29.0, 115.0, 2.0),
+            # > Icône onglet FILLES inactif. Format : Rectangle.
+            # > Valeur de départ EN : (87.0, -29.0, 115.0, 2.0)
+
+            "onglet_tenue_inactif_rectangle": (118.0, -29.0, 146.0, 2.0),
+            # > Icône onglet TENUE inactif. Format : Rectangle.
+            # > Valeur de départ EN : (118.0, -29.0, 146.0, 2.0)
+
+            "onglet_objet_inactif_rectangle": (148.0, -29.0, 176.0, 2.0),
+            # > Icône onglet OBJET inactif. Format : Rectangle.
+            # > Valeur de départ EN : (148.0, -29.0, 176.0, 2.0)
+
+            "onglet_stats_inactif_rectangle": (180.0, -29.0, 208.0, 2.0),
+            # > Icône onglet STATISTIQUES inactif. Format : Rectangle.
+            # > Valeur de départ EN : (180.0, -29.0, 208.0, 2.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > GLOBAL
+            # =====================
+
+            "quete_onglet_actif_rectangle": (38.0, -29.0, 101.0, 2.0),
+            # > Surbrillance de l’onglet AND NOW actif. Format : Rectangle.
+            # > Valeur de départ EN : (38.0, -29.0, 101.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE
+            # =====================
+
+            "quete_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE > ICON A DROITE
+            # =====================
+
+            "quete_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > SCROLL BOUTTON QUÊTES GAUCHE
+            # =====================
+
+            "quete_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Bouton/flèche HAUT. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 52.0, 36.0, 72.0)
+
+            "quete_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Bouton/flèche BAS. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP GAUCHE > QUÊTES
+            # =====================
+
+            "quete_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Zone complète de la liste des quêtes. Format : Rectangle.
+            # > Valeur de départ EN : (38.0, 32.0, 272.0, 286.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > SOUS-TITRE DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_sous_titre_rectangle": (280.0, 25.0, 460.0, 65.0),
+            # > Zone du sous-titre visible au-dessus de la description. Format : Rectangle.
+            # > Valeur de départ EN : (280.0, 25.0, 460.0, 65.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_description_rectangle": (261.0, 75.0, 482.0, 350.0),
+            # > Zone du texte de description à droite. Format : Rectangle.
+            # > Valeur de départ EN : (261.0, 75.0, 482.0, 350.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "quete_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide PAGE gauche. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 353.0, 170.0, 385.0)
+
+            "quete_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide HAUT/BAS centre. Format : Rectangle.
+            # > Valeur de départ EN : (171.0, 353.0, 340.0, 385.0)
+
+            "quete_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide RETOUR droite. Format : Rectangle.
+            # > Valeur de départ EN : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > GLOBAL
+            # =====================
+
+            "fille_onglet_actif_rectangle": (70.0, -29.0, 133.0, 2.0),
+            # > Surbrillance onglet FILLES actif. Format : Rectangle.
+            # > Valeur de départ EN : (70.0, -29.0, 133.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE "FILLES"
+            # =====================
+
+            "fille_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE > ICON A DROITE "FILLES"
+            # =====================
+
+            "fille_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP GAUCHE > lISTE FILLE
+            # =====================
+
+            "fille_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des filles à gauche. Format : Rectangle.
+            # > Valeur de départ EN : (38.0, 32.0, 272.0, 286.0)
+
+            "fille_image_principale_rectangle": (311.0, 22.0, 439.0, 150.0),
+            # > Grande image/portrait à droite. Format : Rectangle.
+            # > Valeur de départ EN : (311.0, 22.0, 439.0, 150.0)
+
+            "fille_icone_rectangle": (343.0, 210.0, 407.0, 274.0),
+            # > Icône/image secondaire à droite. Format : Rectangle.
+            # > Valeur de départ EN : (343.0, 210.0, 407.0, 274.0)
+
+            "fille_token_texte_rectangle": (311.0, 285.0, 439.0, 315.0),
+            # > Zone texte/token en bas à droite. Format : Rectangle.
+            # > Valeur de départ EN : (311.0, 285.0, 439.0, 315.0)
+
+            "fille_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche HAUT. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 52.0, 36.0, 72.0)
+
+            "fille_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche BAS. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP DROITE > HISTORIQUE
+            # =====================
+
+            "fille_texte_milieu_rectangle": (311.0, 175.0, 439.0, 205.0),
+            # > Zone texte centrale à droite. Format : Rectangle.
+            # > Valeur de départ EN : (311.0, 175.0, 439.0, 205.0)
+
+            "fille_historique_fond_rectangle": (48.0, 36.0, 592.0, 377.0),
+            # > Zone écran historique fille. Format : Rectangle.
+            # > Valeur de départ EN : (48.0, 36.0, 592.0, 377.0)
+
+            "fille_historique_titre_rectangle": (335.0, 90.0, 463.0, 110.0),
+            # > Titre/nom dans historique. Format : Rectangle.
+            # > Valeur de départ EN : (335.0, 90.0, 463.0, 110.0)
+
+            "fille_historique_image_rectangle": (335.0, 120.0, 463.0, 248.0),
+            # > Image historique. Format : Rectangle.
+            # > Valeur de départ EN : (335.0, 120.0, 463.0, 248.0)
+
+            "fille_historique_liste_titre_rectangle": (38.0, 30.0, 272.0, 55.0),
+            # > Titre liste historique. Format : Rectangle.
+            # > Valeur de départ EN : (38.0, 30.0, 272.0, 55.0)
+
+            "fille_historique_liste_rectangle": (38.0, 70.0, 272.0, 295.0),
+            # > Liste historique. Format : Rectangle.
+            # > Valeur de départ EN : (38.0, 70.0, 272.0, 295.0)
+
+            "fille_historique_scroll_haut_rectangle": (16.0, 90.0, 36.0, 110.0),
+            # > Flèche haut historique. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 90.0, 36.0, 110.0)
+
+            "fille_historique_scroll_bas_rectangle": (16.0, 260.0, 36.0, 280.0),
+            # > Flèche bas historique. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 260.0, 36.0, 280.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "fille_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 353.0, 123.0, 385.0)
+
+            "fille_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ EN : (124.0, 353.0, 251.0, 385.0)
+
+            "fille_aide_selection_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (252.0, 353.0, 390.0, 385.0)
+
+            "fille_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > GLOBAL
+            # =====================
+
+            "tenue_onglet_actif_rectangle": (101.0, -29.0, 164.0, 2.0),
+            # > Surbrillance onglet TENUE actif. Format : Rectangle.
+            # > Valeur de départ EN : (101.0, -29.0, 164.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE  "TENU"
+            # =====================
+
+            "tenue_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE > ICON A DROITE "TENU"
+            # =====================
+
+            "tenue_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP GAUCHE > LISTE TENU
+            # =====================
+
+            "tenue_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des tenues à gauche. Format : Rectangle.
+            # > Valeur de départ EN : (38.0, 32.0, 272.0, 286.0)
+
+            "tenue_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 52.0, 36.0, 72.0)
+
+            "tenue_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP DROITE > AFFICHE TENU
+            # =====================
+
+            "tenue_sous_titre_rectangle": (291.0, 247.0, 495.0, 262.0),
+            # > Sous-titre ACCESSOIRES affiché dans le corps droit.
+
+            "tenue_accessoire_1_rectangle": (291.0, 262.0, 336.0, 314.0),
+            # > Emplacement accessoire 1. Format : Rectangle.
+            # > Valeur de départ EN : (291.0, 262.0, 336.0, 314.0)
+
+            "tenue_accessoire_2_rectangle": (344.0, 262.0, 389.0, 314.0),
+            # > Emplacement accessoire 2. Format : Rectangle.
+            # > Valeur de départ EN : (344.0, 262.0, 389.0, 314.0)
+
+            "tenue_accessoire_3_rectangle": (397.0, 262.0, 442.0, 314.0),
+            # > Emplacement accessoire 3. Format : Rectangle.
+            # > Valeur de départ EN : (397.0, 262.0, 442.0, 314.0)
+
+            "tenue_accessoire_4_rectangle": (450.0, 262.0, 495.0, 314.0),
+            # > Emplacement accessoire 4. Format : Rectangle.
+            # > Valeur de départ EN : (450.0, 262.0, 495.0, 314.0)
+
+
+            # =====================
+            # LIVRE NOIR > OONGLET TENU > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > GLOBAL
+            # =====================
+
+            "objet_onglet_actif_rectangle": (131.0, -29.0, 194.0, 2.0),
+            # > Surbrillance onglet OBJET actif. Format : Rectangle.
+            # > Valeur de départ EN : (131.0, -29.0, 194.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE "OBJETS"
+            # =====================
+
+            "objet_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE "OBJETS" > RIGHT ICON
+            # =====================
+
+            "objet_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP GAUCHE > LIST OBJET
+            # =====================
+
+            "objet_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des objets à gauche. Format : Rectangle.
+            # > Valeur de départ EN : (38.0, 32.0, 272.0, 286.0)
+
+            "objet_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 52.0, 36.0, 72.0)
+
+            "objet_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP DROITE > DESCRIPTION OBJET
+            # =====================
+
+            "objet_image_rectangle": (343.0, 54.0, 407.0, 118.0),
+            # > Image de l’objet sélectionné. Format : Rectangle.
+            # > Valeur de départ EN : (343.0, 54.0, 407.0, 118.0)
+
+            "objet_description_rectangle": (280.0, 130.0, 460.0, 400.0),
+            # > Description de l’objet à droite. Format : Rectangle.
+            # > Valeur de départ EN : (280.0, 130.0, 460.0, 400.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "objet_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 353.0, 123.0, 385.0)
+
+            "objet_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ EN : (124.0, 353.0, 251.0, 385.0)
+
+            "objet_aide_detail_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide détails. Format : Rectangle.
+            # > Valeur de départ EN : (252.0, 353.0, 390.0, 385.0)
+
+            "objet_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > GLOBAL
+            # =====================
+
+            "stats_onglet_actif_rectangle": (163.0, -29.0, 226.0, 2.0),
+            # > Surbrillance onglet STATISTIQUES actif. Format : Rectangle.
+            # > Valeur de départ EN : (163.0, -29.0, 226.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE "STATISTIQUES"
+            # =====================
+
+            "stats_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE "STATISTIQUES" > RIGHT ICON
+            # =====================
+
+            "stats_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP GAUCHE > LIST STAT TYPE
+            # =====================
+
+            "stats_liste_gauche_rectangle": (38.0, 32.0, 272.0, 285.0),
+            # > Liste catégories statistiques à gauche. Format : Rectangle.
+            # > Valeur de départ EN : (38.0, 32.0, 272.0, 285.0)
+
+            "stats_item_gauche_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une catégorie statistiques gauche. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 234.0, 28.0)
+
+            "stats_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 52.0, 36.0, 72.0)
+
+            "stats_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ EN : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP DROITE > DETAIL STAT TYPE
+            # =====================
+
+            "stats_liste_droite_rectangle": (270.0, 32.0, 490.0, 286.0),
+            # > Zone valeurs statistiques à droite. Format : Rectangle.
+            # > Valeur de départ EN : (270.0, 32.0, 490.0, 286.0)
+
+            "stats_item_droite_rectangle": (0.0, 0.0, 220.0, 24.0),
+            # > Taille d’une ligne statistique droite. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 220.0, 24.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "stats_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide page. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 353.0, 170.0, 385.0)
+
+            "stats_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ EN : (171.0, 353.0, 340.0, 385.0)
+
+            "stats_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU OPTION > GLOBAL
+            # =====================
+
+            "option_ecran_rectangle": (128.0, 92.0, 512.0, 316.0),
+            # > Zone écran OPTIONS. Format : Rectangle.
+            # > Valeur de départ EN : (128.0, 92.0, 512.0, 316.0)
+
+            "option_liste_rectangle": (-32.0, 32.0, 416.0, 206.0),
+            # > Zone de la liste OPTIONS. Format : Rectangle.
+            # > Valeur de départ EN : (-32.0, 32.0, 416.0, 206.0)
+
+            "option_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Audio/Rumble/Difficulté/Contrôleur. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # OPTION > AUDIO
+            # =====================
+
+            "audio_ecran_rectangle": (130.0, 92.0, 510.0, 313.0),
+            # > Zone écran AUDIO. Format : Rectangle.
+            # > Valeur de départ EN : (130.0, 92.0, 510.0, 313.0)
+
+            "audio_liste_rectangle": (30.0, 50.0, 150.0, 171.0),
+            # > Liste des 3 réglages audio. Format : Rectangle.
+            # > Valeur de départ EN : (30.0, 50.0, 150.0, 171.0)
+
+            "audio_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille d’une ligne audio. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 120.0, 40.0)
+
+            "audio_fleche_gauche_1_rectangle": (165.0, 63.0, 181.0, 79.0),
+            # > Flèche gauche ligne 1. Format : Rectangle.
+            # > Valeur de départ EN : (165.0, 63.0, 181.0, 79.0)
+
+            "audio_fleche_gauche_2_rectangle": (165.0, 103.0, 181.0, 119.0),
+            # > Flèche gauche ligne 2. Format : Rectangle.
+            # > Valeur de départ EN : (165.0, 103.0, 181.0, 119.0)
+
+            "audio_fleche_gauche_3_rectangle": (165.0, 143.0, 181.0, 159.0),
+            # > Flèche gauche ligne 3. Format : Rectangle.
+            # > Valeur de départ EN : (165.0, 143.0, 181.0, 159.0)
+
+            "audio_fleche_droite_1_rectangle": (329.0, 63.0, 345.0, 79.0),
+            # > Flèche droite ligne 1. Format : Rectangle.
+            # > Valeur de départ EN : (329.0, 63.0, 345.0, 79.0)
+
+            "audio_fleche_droite_2_rectangle": (329.0, 103.0, 345.0, 119.0),
+            # > Flèche droite ligne 2. Format : Rectangle.
+            # > Valeur de départ EN : (329.0, 103.0, 345.0, 119.0)
+
+            "audio_fleche_droite_3_rectangle": (329.0, 143.0, 345.0, 159.0),
+            # > Flèche droite ligne 3. Format : Rectangle.
+            # > Valeur de départ EN : (329.0, 143.0, 345.0, 159.0)
+
+            "audio_aide_gauche_droite_rectangle": (-86.0, 231.0, 190.0, 261.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ EN : (-86.0, 231.0, 190.0, 261.0)
+
+            "audio_aide_retour_rectangle": (191.0, 231.0, 319.0, 261.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (191.0, 231.0, 319.0, 261.0)
+
+            "audio_aide_selection_rectangle": (320.0, 231.0, 468.0, 261.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (320.0, 231.0, 468.0, 261.0)
+
+
+            # =====================
+            # OPTION > DIFICULTE
+            # =====================
+
+            "difficulte_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ EN : (130.0, 92.0, 510.0, 233.0)
+
+            "difficulte_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ EN : (30.0, 60.0, 150.0, 101.0)
+
+            "difficulte_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 120.0, 40.0)
+
+            "difficulte_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ EN : (165.0, 73.0, 181.0, 89.0)
+
+            "difficulte_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ EN : (329.0, 73.0, 345.0, 89.0)
+
+            "difficulte_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ EN : (-30.0, 151.0, 116.0, 181.0)
+
+            "difficulte_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (117.0, 151.0, 264.0, 181.0)
+
+            "difficulte_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # OPTION CONTROLLER
+            # =====================
+
+            "controleur_ecran_rectangle": (48.0, 132.0, 592.0, 328.0),
+            # > Zone écran contrôleur. Format : Rectangle.
+            # > Valeur de départ EN : (48.0, 132.0, 592.0, 328.0)
+
+            "controleur_liste_rectangle": (105.0, 70.0, 245.0, 154.0),
+            # > Liste options contrôleur. Format : Rectangle.
+            # > Valeur de départ EN : (105.0, 70.0, 245.0, 154.0)
+
+            "controleur_item_rectangle": (0.0, 0.0, 140.0, 28.0),
+            # > Taille d’une ligne contrôleur. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 140.0, 28.0)
+
+            "controleur_aide_haut_bas_rectangle": (0.0, 206.0, 136.0, 236.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 206.0, 136.0, 236.0)
+
+            "controleur_aide_cycle_rectangle": (137.0, 206.0, 273.0, 236.0),
+            # > Aide cycle. Format : Rectangle.
+            # > Valeur de départ EN : (137.0, 206.0, 273.0, 236.0)
+
+            "controleur_aide_retour_rectangle": (274.0, 206.0, 409.0, 236.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (274.0, 206.0, 409.0, 236.0)
+
+            "controleur_aide_selection_rectangle": (410.0, 206.0, 545.0, 236.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (410.0, 206.0, 545.0, 236.0)
+
+
+            # =====================
+            # OPTION CONTROLLER > VIBRATION
+            # =====================
+
+            "vibration_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran VIBRATION. Format : Rectangle.
+            # > Valeur de départ EN : (130.0, 92.0, 510.0, 233.0)
+
+            "vibration_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste VIBRATION. Format : Rectangle.
+            # > Valeur de départ EN : (30.0, 60.0, 150.0, 101.0)
+
+            "vibration_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne VIBRATION. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 120.0, 40.0)
+
+            "vibration_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ EN : (165.0, 73.0, 181.0, 89.0)
+
+            "vibration_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ EN : (329.0, 73.0, 345.0, 89.0)
+
+            "vibration_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ EN : (-30.0, 151.0, 116.0, 181.0)
+
+            "vibration_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (117.0, 151.0, 264.0, 181.0)
+
+            "vibration_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # MENU OPTION > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "option_aide_haut_bas_rectangle": (-30.0, 234.0, 118.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ EN : (-30.0, 234.0, 118.0, 264.0)
+
+            "option_aide_retour_rectangle": (119.0, 234.0, 266.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (119.0, 234.0, 266.0, 264.0)
+
+            "option_aide_selection_rectangle": (267.0, 234.0, 414.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (267.0, 234.0, 414.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PHOTO > GLOBAL
+            # =====================
+
+            "photo_menu_ecran_rectangle": (128.0, 128.0, 512.0, 272.0),
+            # > Zone écran choix PHOTO. Format : Rectangle.
+            # > Valeur de départ EN : (128.0, 128.0, 512.0, 272.0)
+
+            "photo_menu_liste_rectangle": (-32.0, 32.0, 416.0, 128.0),
+            # > Zone liste Album/Galerie. Format : Rectangle.
+            # > Valeur de départ EN : (-32.0, 32.0, 416.0, 128.0)
+
+            "photo_menu_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Album/Galerie. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # PHOTO > CHOIX MENU PHOTO GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # PHOTO > ALBUM
+            # =====================
+
+            "photo_album_ecran_rectangle": (64.0, 64.0, 576.0, 384.0),
+            # > Zone complète album photo. Format : Rectangle.
+            # > Valeur de départ EN : (64.0, 64.0, 576.0, 384.0)
+
+            "photo_album_titre_rectangle": (52.0, 43.0, 466.0, 73.0),
+            # > Zone titre album. Format : Rectangle.
+            # > Valeur de départ EN : (52.0, 43.0, 466.0, 73.0)
+
+            "photo_album_scroll_gauche_rectangle": (22.0, 30.0, 38.0, 46.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ EN : (22.0, 30.0, 38.0, 46.0)
+
+            "photo_album_scroll_droite_rectangle": (475.0, 30.0, 491.0, 46.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ EN : (475.0, 30.0, 491.0, 46.0)
+
+            "photo_album_scroll_haut_rectangle": (30.0, 78.0, 46.0, 94.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ EN : (30.0, 78.0, 46.0, 94.0)
+
+            "photo_album_scroll_bas_rectangle": (30.0, 232.0, 46.0, 248.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ EN : (30.0, 232.0, 46.0, 248.0)
+
+            "photo_album_photo_1_rectangle": (72.0, 68.0, 190.0, 158.0),
+            # > Vignette photo 1. Format : Rectangle.
+            # > Valeur de départ EN : (72.0, 68.0, 190.0, 158.0)
+
+            "photo_album_photo_2_rectangle": (200.0, 68.0, 318.0, 158.0),
+            # > Vignette photo 2. Format : Rectangle.
+            # > Valeur de départ EN : (200.0, 68.0, 318.0, 158.0)
+
+            "photo_album_photo_3_rectangle": (328.0, 68.0, 446.0, 158.0),
+            # > Vignette photo 3. Format : Rectangle.
+            # > Valeur de départ EN : (328.0, 68.0, 446.0, 158.0)
+
+            "photo_album_photo_4_rectangle": (72.0, 168.0, 190.0, 258.0),
+            # > Vignette photo 4. Format : Rectangle.
+            # > Valeur de départ EN : (72.0, 168.0, 190.0, 258.0)
+
+            "photo_album_photo_5_rectangle": (200.0, 168.0, 318.0, 258.0),
+            # > Vignette photo 5. Format : Rectangle.
+            # > Valeur de départ EN : (200.0, 168.0, 318.0, 258.0)
+
+            "photo_album_photo_6_rectangle": (328.0, 168.0, 446.0, 258.0),
+            # > Vignette photo 6. Format : Rectangle.
+            # > Valeur de départ EN : (328.0, 168.0, 446.0, 258.0)
+
+
+            # =====================
+            # PHOTO > GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU PHOTO > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "photo_menu_aide_haut_bas_rectangle": (-20.0, 154.0, 128.0, 184.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ EN : (-20.0, 154.0, 128.0, 184.0)
+
+            "photo_menu_aide_retour_rectangle": (129.0, 154.0, 256.0, 184.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (129.0, 154.0, 256.0, 184.0)
+
+            "photo_menu_aide_selection_rectangle": (257.0, 154.0, 404.0, 184.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (257.0, 154.0, 404.0, 184.0)
+
+            "photo_album_aide_navigation_rectangle": (32.0, 330.0, 190.0, 360.0),
+            # > Aide navigation. Format : Rectangle.
+            # > Valeur de départ EN : (32.0, 330.0, 190.0, 360.0)
+
+            "photo_album_aide_zoom_rectangle": (201.0, 330.0, 318.0, 360.0),
+            # > Aide zoom. Format : Rectangle.
+            # > Valeur de départ EN : (201.0, 330.0, 318.0, 360.0)
+
+            "photo_album_aide_retour_rectangle": (318.0, 330.0, 447.0, 360.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (318.0, 330.0, 447.0, 360.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU EXTRA > GLOBAL
+            # =====================
+
+            "extra_ecran_rectangle": (64.0, 128.0, 576.0, 352.0),
+            # > Zone complète EXTRA. Format : Rectangle.
+            # > Valeur de départ EN : (64.0, 128.0, 576.0, 352.0)
+
+            "extra_liste_rectangle": (32.0, 32.0, 480.0, 195.0),
+            # > Zone liste EXTRA. Format : Rectangle.
+            # > Valeur de départ EN : (32.0, 32.0, 480.0, 195.0)
+
+            "extra_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille Concept Art/Personnage/Bonus/Crédits. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # EXTRA > COMCEPT ART
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > PERSONNAGE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > OPTION BONUS
+            # =====================
+
+            "bonus_ecran_rectangle": (110.0, 72.0, 530.0, 253.0),
+            # > Zone écran options bonus. Format : Rectangle.
+            # > Valeur de départ EN : (110.0, 72.0, 530.0, 253.0)
+
+            "bonus_liste_rectangle": (30.0, 60.0, 190.0, 141.0),
+            # > Zone liste options bonus. Format : Rectangle.
+            # > Valeur de départ EN : (30.0, 60.0, 190.0, 141.0)
+
+            "bonus_item_rectangle": (0.0, 0.0, 160.0, 40.0),
+            # > Taille d’une option bonus. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 0.0, 160.0, 40.0)
+
+            "bonus_aide_gauche_droite_rectangle": (0.0, 191.0, 140.0, 221.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 191.0, 140.0, 221.0)
+
+            "bonus_aide_retour_rectangle": (141.0, 191.0, 280.0, 221.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (141.0, 191.0, 280.0, 221.0)
+
+            "bonus_aide_selection_rectangle": (281.0, 191.0, 420.0, 221.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (281.0, 191.0, 420.0, 221.0)
+
+
+            # =====================
+            # EXTRA > OREDIT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU EXTRA > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "extra_aide_haut_bas_rectangle": (0.0, 236.0, 170.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 236.0, 170.0, 264.0)
+
+            "extra_aide_retour_rectangle": (171.0, 236.0, 340.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ EN : (171.0, 236.0, 340.0, 264.0)
+
+            "extra_aide_selection_rectangle": (341.0, 236.0, 512.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ EN : (341.0, 236.0, 512.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU SAUVEGARDE / CHARGEMENT > GLOBAL
+            # =====================
+
+            "sauvegarde_ecran_rectangle": (64.0, 79.0, 576.0, 401.0),
+            # > Zone écran sauvegarde/chargement. Format : Rectangle.
+            # > Valeur de départ EN : (64.0, 79.0, 576.0, 401.0)
+
+            "sauvegarde_liste_rectangle": (55.0, 113.0, 457.0, 281.0),
+            # > Zone liste sauvegardes. Format : Rectangle.
+            # > Valeur de départ EN : (55.0, 113.0, 457.0, 281.0)
+
+            "sauvegarde_fleche_gauche_rectangle": (23.0, 30.0, 55.0, 62.0),
+            # > Flèche page gauche. Format : Rectangle.
+            # > Valeur de départ EN : (23.0, 30.0, 55.0, 62.0)
+
+            "sauvegarde_fleche_droite_rectangle": (457.0, 30.0, 489.0, 62.0),
+            # > Flèche page droite. Format : Rectangle.
+            # > Valeur de départ EN : (457.0, 30.0, 489.0, 62.0)
+
+            "sauvegarde_fleche_haut_rectangle": (31.0, 121.0, 46.0, 137.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ EN : (31.0, 121.0, 46.0, 137.0)
+
+            "sauvegarde_fleche_bas_rectangle": (31.0, 257.0, 46.0, 273.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ EN : (31.0, 257.0, 46.0, 273.0)
+
+            "sauvegarde_info_rectangle": (-42.0, 50.0, 554.0, 70.0),
+            # > Zone texte information. Format : Rectangle.
+            # > Valeur de départ EN : (-42.0, 50.0, 554.0, 70.0)
+
+            "sauvegarde_espace_libre_rectangle": (50.0, 281.0, 346.0, 309.0),
+            # > Zone texte espace libre. Format : Rectangle.
+            # > Valeur de départ EN : (50.0, 281.0, 346.0, 309.0)
+
+            "sauvegarde_bouton_sauver_rectangle": (0.0, 332.0, 170.0, 362.0),
+            # > Bouton SAUVER/CHARGER gauche. Format : Rectangle.
+            # > Valeur de départ EN : (0.0, 332.0, 170.0, 362.0)
+
+            "sauvegarde_bouton_supprimer_rectangle": (171.0, 332.0, 384.0, 362.0),
+            # > Bouton SUPPRIMER. Format : Rectangle.
+            # > Valeur de départ EN : (171.0, 332.0, 384.0, 362.0)
+
+            "sauvegarde_bouton_annuler_rectangle": (385.0, 332.0, 512.0, 362.0),
+            # > Bouton ANNULER. Format : Rectangle.
+            # > Valeur de départ EN : (385.0, 332.0, 512.0, 362.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL HAUTEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL LARGEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ACTIVE
+            # =====================
+
+            "gdef_s_x": 0.755,  # Aides/boutons sélectionnés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL INACTIVE
+            # =====================
+
+            "gdef_gy_x": 0.65,  # Aides/boutons grisés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL SIZE
+            # =====================
+
+            "gdef_w_x": 0.65,  # Aides/boutons blancs. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ESPACEMENT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ICON
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # TAILLES TEXTE GLOBALES
+            # =====================
+
+            # Grands titres normaux. Format : décimal, exemple 0.40.
+            "title_x": 0.4,
+
+            "title_gr_x": 0.4,  # Grands titres grisés. Format : décimal.
+
+            # Grands titres sélectionnés. Format : décimal.
+            "title_s_x": 0.505,
+
+            "stitle_x": 0.35,  # Titres de menu normaux. Format : décimal.
+
+            # Titres de menu sélectionnés. Format : décimal.
+            "stitle_s_x": 0.35,
+
+            "stitle_g_x": 0.35,  # Titres de menu grisés. Format : décimal.
+
+            "stitlesm_x": 0.2,  # Petits sous-titres. Format : décimal.
+
+            # Textes quêtes/onglets normaux. Format : décimal.
+            "ititle_x": 0.22,
+
+            # Textes quêtes/onglets sélectionnés. Format : décimal.
+            "ititle_s_x": 0.22,
+
+            # Textes quêtes/onglets grisés. Format : décimal.
+            "ititle_g_x": 0.22,
+
+            # Descriptions/statistiques blanches. Format : décimal.
+            "desc_wht_x": 0.53,
+
+            # Descriptions/statistiques grisées. Format : décimal.
+            "desc_gry_x": 0.53,
+
         },
         "fr": {
-            "edition": "SLES_526.42",       # Edition PS2 française source.
-            "largeur_menu": 300.0,          # Boutons élargis à 300 pixels.
-            "pause": (10.0, 310.0),         # Menu Pause élargi vers la gauche.
-            "principal": (161.0, 461.0),    # Menu principal élargi.
-            # Titre supérieur droit du Livre noir.
-            "title_x": 0.20,
-            "title_gr_x": 0.20,             # Même titre lorsqu'il est grisé.
-            # Même titre lorsqu'il est sélectionné.
-            "title_s_x": 0.30,
-            "stitle_x": 0.22,               # Sauver/Options/Photo/Extra.
-            "stitle_s_x": 0.22,             # Même choix en surbrillance.
-            "stitle_g_x": 0.22,             # Même choix désactivé.
-            "stitlesm_x": 0.16,             # Petits sous-titres compacts.
-            "ititle_x": 0.12,               # Statistiques/objectifs/onglets.
-            "ititle_s_x": 0.12,             # Petits textes sélectionnés.
-            "ititle_g_x": 0.12,             # Petits textes désactivés.
-            # Page/Su-Giù/Indietro/Sélectionner.
-            "gdef_w_x": 0.48,
-            # Même bouton sélectionné en orange.
-            "gdef_s_x": 0.55,
-            "gdef_gy_x": 0.48,              # Même bouton grisé/désactivé.
-            "desc_wht_x": 0.38,             # Pourcentage/Évaluation/Temps.
-            "desc_gry_x": 0.38,             # Même texte lorsqu'il est grisé.
-            "description_x1": 280.0,        # Descriptions décalées à droite.
+
+            # =====================
+            # LANGUE
+            # =====================
+
+            "edition": "SLES_526.42",  # Edition PS2 source pour ce profil.
+
+
+            # =====================
+            # MENU PRINCIPAL  GLOBAL
+            # =====================
+
+            "menu_principal_rectangle": (161.0, 250.0, 461.0, 355.0),
+            # > Zone complète du menu principal. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (161.0, 250.0, 461.0, 355.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > NOUVELLE PARTIE
+            # =====================
+
+            "menu_principal_nouvelle_partie_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton NOUVELLE PARTIE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+            "menu_principal_texte_demarrer_rectangle": (84.0, 285.0, 576.0, 320.0),
+            # > Zone du texte/indication de démarrage. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (84.0, 285.0, 576.0, 320.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > CHARGER
+            # =====================
+
+            "menu_principal_charger_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton CHARGER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > QUITTER
+            # =====================
+
+            "menu_principal_quitter_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PAUSE > GLOBAL
+            # =====================
+
+            "menu_pause_ecran_rectangle": (160.0, 101.0, 480.0, 379.0),
+            # > Zone écran du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (160.0, 101.0, 480.0, 379.0)
+
+            "menu_pause_liste_rectangle": (10.0, 32.0, 310.0, 243.0),
+            # > Zone contenant les 6 choix du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (10.0, 32.0, 310.0, 243.0)
+
+
+            # =====================
+            # MENU PAUSE > LIVRE NOIR
+            # =====================
+
+            "menu_pause_bouton_1_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton LIVRE NOIR. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > SAUVEGARDE
+            # =====================
+
+            "menu_pause_bouton_2_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton SAUVEGARDE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > OPTION
+            # =====================
+
+            "menu_pause_bouton_3_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton OPTION. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > PHOTO
+            # =====================
+
+            "menu_pause_bouton_4_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton PHOTO. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > EXTRA
+            # =====================
+
+            "menu_pause_bouton_5_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton EXTRA. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > QUITTER
+            # =====================
+
+            "menu_pause_bouton_6_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "menu_pause_aide_haut_bas_rectangle": (-80.0, 288.0, 86.0, 318.0),
+            # > Zone aide HAUT/BAS. Format : Rectangle.
+            # > Valeur de départ FR : (-80.0, 288.0, 86.0, 318.0)
+
+            "menu_pause_aide_retour_rectangle": (87.0, 288.0, 233.0, 318.0),
+            # > Zone aide RETOUR. Format : Rectangle.
+            # > Valeur de départ FR : (87.0, 288.0, 233.0, 318.0)
+
+            "menu_pause_aide_selection_rectangle": (234.0, 288.0, 400.0, 318.0),
+            # > Zone aide SÉLECTION. Format : Rectangle.
+            # > Valeur de départ FR : (234.0, 288.0, 400.0, 318.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU LIVRE NOIR > GLOBAL
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR GLOBAL FOND RECTANGLE BLEU
+            # =====================
+
+            "livre_noir_fond_rectangle": (64.0, 63.0, 576.0, 407.0),
+            # > Fond/zone principale bleue du Livre noir. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ FR : (64.0, 63.0, 576.0, 407.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS >
+            # =====================
+
+            "livre_noir_item_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une entrée générique des listes Livre noir ; hauteur = pas vertical de base. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 234.0, 28.0)
+
+            "livre_noir_item_icone_rectangle": (0.0, 4.0, 20.0, 24.0),
+            # > Zone de l’icône interne d’une entrée de liste. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 4.0, 20.0, 24.0)
+
+            "livre_noir_item_texte_marge_rectangle": (25.0, 0.0, 25.0, 0.0),
+            # > Marge/zone interne du texte d’une entrée ; 25.0 réserve la place de l’icône. Format : Rectangle.
+            # > Valeur de départ FR : (25.0, 0.0, 25.0, 0.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON ACTIVE HAUT GAUCHE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON INACTIVE HAUT GAUCHE
+            # =====================
+
+            "onglet_quete_inactif_rectangle": (55.0, -29.0, 83.0, 2.0),
+            # > Icône onglet AND NOW inactif. Format : Rectangle.
+            # > Valeur de départ FR : (55.0, -29.0, 83.0, 2.0)
+
+            "onglet_filles_inactif_rectangle": (87.0, -29.0, 115.0, 2.0),
+            # > Icône onglet FILLES inactif. Format : Rectangle.
+            # > Valeur de départ FR : (87.0, -29.0, 115.0, 2.0)
+
+            "onglet_tenue_inactif_rectangle": (118.0, -29.0, 146.0, 2.0),
+            # > Icône onglet TENUE inactif. Format : Rectangle.
+            # > Valeur de départ FR : (118.0, -29.0, 146.0, 2.0)
+
+            "onglet_objet_inactif_rectangle": (148.0, -29.0, 176.0, 2.0),
+            # > Icône onglet OBJET inactif. Format : Rectangle.
+            # > Valeur de départ FR : (148.0, -29.0, 176.0, 2.0)
+
+            "onglet_stats_inactif_rectangle": (180.0, -29.0, 208.0, 2.0),
+            # > Icône onglet STATISTIQUES inactif. Format : Rectangle.
+            # > Valeur de départ FR : (180.0, -29.0, 208.0, 2.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > GLOBAL
+            # =====================
+
+            "quete_onglet_actif_rectangle": (38.0, -29.0, 101.0, 2.0),
+            # > Surbrillance de l’onglet AND NOW actif. Format : Rectangle.
+            # > Valeur de départ FR : (38.0, -29.0, 101.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE
+            # =====================
+
+            "quete_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE > ICON A DROITE
+            # =====================
+
+            "quete_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > SCROLL BOUTTON QUÊTES GAUCHE
+            # =====================
+
+            "quete_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Bouton/flèche HAUT. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 52.0, 36.0, 72.0)
+
+            "quete_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Bouton/flèche BAS. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP GAUCHE > QUÊTES
+            # =====================
+
+            "quete_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Zone complète de la liste des quêtes. Format : Rectangle.
+            # > Valeur de départ FR : (38.0, 32.0, 272.0, 286.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > SOUS-TITRE DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_sous_titre_rectangle": (280.0, 25.0, 460.0, 65.0),
+            # > Zone du sous-titre visible au-dessus de la description. Format : Rectangle.
+            # > Valeur de départ FR : (280.0, 25.0, 460.0, 65.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_description_rectangle": (280.0, 75.0, 482.0, 350.0),
+            # > Zone du texte de description à droite. Format : Rectangle.
+            # > Valeur de départ FR : (280.0, 75.0, 482.0, 350.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "quete_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide PAGE gauche. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 353.0, 170.0, 385.0)
+
+            "quete_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide HAUT/BAS centre. Format : Rectangle.
+            # > Valeur de départ FR : (171.0, 353.0, 340.0, 385.0)
+
+            "quete_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide RETOUR droite. Format : Rectangle.
+            # > Valeur de départ FR : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > GLOBAL
+            # =====================
+
+            "fille_onglet_actif_rectangle": (70.0, -29.0, 133.0, 2.0),
+            # > Surbrillance onglet FILLES actif. Format : Rectangle.
+            # > Valeur de départ FR : (70.0, -29.0, 133.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE  "FILLES"
+            # =====================
+
+            "fille_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE > ICON A DROITE "FILLES"
+            # =====================
+
+            "fille_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP GAUCHE > lISTE FILLE
+            # =====================
+
+            "fille_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des filles à gauche. Format : Rectangle.
+            # > Valeur de départ FR : (38.0, 32.0, 272.0, 286.0)
+
+            "fille_image_principale_rectangle": (311.0, 22.0, 439.0, 150.0),
+            # > Grande image/portrait à droite. Format : Rectangle.
+            # > Valeur de départ FR : (311.0, 22.0, 439.0, 150.0)
+
+            "fille_icone_rectangle": (343.0, 210.0, 407.0, 274.0),
+            # > Icône/image secondaire à droite. Format : Rectangle.
+            # > Valeur de départ FR : (343.0, 210.0, 407.0, 274.0)
+
+            "fille_token_texte_rectangle": (311.0, 285.0, 439.0, 315.0),
+            # > Zone texte/token en bas à droite. Format : Rectangle.
+            # > Valeur de départ FR : (311.0, 285.0, 439.0, 315.0)
+
+            "fille_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche HAUT. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 52.0, 36.0, 72.0)
+
+            "fille_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche BAS. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP DROITE > HISTORIQUE
+            # =====================
+
+            "fille_texte_milieu_rectangle": (311.0, 175.0, 439.0, 205.0),
+            # > Zone texte centrale à droite. Format : Rectangle.
+            # > Valeur de départ FR : (311.0, 175.0, 439.0, 205.0)
+
+            "fille_historique_fond_rectangle": (48.0, 36.0, 592.0, 377.0),
+            # > Zone écran historique fille. Format : Rectangle.
+            # > Valeur de départ FR : (48.0, 36.0, 592.0, 377.0)
+
+            "fille_historique_titre_rectangle": (335.0, 90.0, 463.0, 110.0),
+            # > Titre/nom dans historique. Format : Rectangle.
+            # > Valeur de départ FR : (335.0, 90.0, 463.0, 110.0)
+
+            "fille_historique_image_rectangle": (335.0, 120.0, 463.0, 248.0),
+            # > Image historique. Format : Rectangle.
+            # > Valeur de départ FR : (335.0, 120.0, 463.0, 248.0)
+
+            "fille_historique_liste_titre_rectangle": (38.0, 30.0, 272.0, 55.0),
+            # > Titre liste historique. Format : Rectangle.
+            # > Valeur de départ FR : (38.0, 30.0, 272.0, 55.0)
+
+            "fille_historique_liste_rectangle": (38.0, 70.0, 272.0, 295.0),
+            # > Liste historique. Format : Rectangle.
+            # > Valeur de départ FR : (38.0, 70.0, 272.0, 295.0)
+
+            "fille_historique_scroll_haut_rectangle": (16.0, 90.0, 36.0, 110.0),
+            # > Flèche haut historique. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 90.0, 36.0, 110.0)
+
+            "fille_historique_scroll_bas_rectangle": (16.0, 260.0, 36.0, 280.0),
+            # > Flèche bas historique. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 260.0, 36.0, 280.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "fille_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 353.0, 123.0, 385.0)
+
+            "fille_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ FR : (124.0, 353.0, 251.0, 385.0)
+
+            "fille_aide_selection_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (252.0, 353.0, 390.0, 385.0)
+
+            "fille_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > GLOBAL
+            # =====================
+
+            "tenue_onglet_actif_rectangle": (101.0, -29.0, 164.0, 2.0),
+            # > Surbrillance onglet TENUE actif. Format : Rectangle.
+            # > Valeur de départ FR : (101.0, -29.0, 164.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE  "TENU"
+            # =====================
+
+            "tenue_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE > ICON A DROITE "TENU"
+            # =====================
+
+            "tenue_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP GAUCHE > LISTE TENU
+            # =====================
+
+            "tenue_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des tenues à gauche. Format : Rectangle.
+            # > Valeur de départ FR : (38.0, 32.0, 272.0, 286.0)
+
+            "tenue_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 52.0, 36.0, 72.0)
+
+            "tenue_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP DROITE > AFFICHE TENU
+            # =====================
+
+            "tenue_sous_titre_rectangle": (291.0, 247.0, 495.0, 262.0),
+            # > Sous-titre ACCESSOIRES affiché dans le corps droit.
+
+            "tenue_accessoire_1_rectangle": (291.0, 262.0, 336.0, 314.0),
+            # > Emplacement accessoire 1. Format : Rectangle.
+            # > Valeur de départ FR : (291.0, 262.0, 336.0, 314.0)
+
+            "tenue_accessoire_2_rectangle": (344.0, 262.0, 389.0, 314.0),
+            # > Emplacement accessoire 2. Format : Rectangle.
+            # > Valeur de départ FR : (344.0, 262.0, 389.0, 314.0)
+
+            "tenue_accessoire_3_rectangle": (397.0, 262.0, 442.0, 314.0),
+            # > Emplacement accessoire 3. Format : Rectangle.
+            # > Valeur de départ FR : (397.0, 262.0, 442.0, 314.0)
+
+            "tenue_accessoire_4_rectangle": (450.0, 262.0, 495.0, 314.0),
+            # > Emplacement accessoire 4. Format : Rectangle.
+            # > Valeur de départ FR : (450.0, 262.0, 495.0, 314.0)
+
+
+            # =====================
+            # LIVRE NOIR > OONGLET TENU > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > GLOBAL
+            # =====================
+
+            "objet_onglet_actif_rectangle": (131.0, -29.0, 194.0, 2.0),
+            # > Surbrillance onglet OBJET actif. Format : Rectangle.
+            # > Valeur de départ FR : (131.0, -29.0, 194.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE  "OBJETS"
+            # =====================
+
+            "objet_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE  "OBJETS" > RIGHT ICON
+            # =====================
+
+            "objet_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP GAUCHE > LIST OBJET
+            # =====================
+
+            "objet_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des objets à gauche. Format : Rectangle.
+            # > Valeur de départ FR : (38.0, 32.0, 272.0, 286.0)
+
+            "objet_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 52.0, 36.0, 72.0)
+
+            "objet_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP DROITE > DESCRIPTION OBJET
+            # =====================
+
+            "objet_image_rectangle": (343.0, 54.0, 407.0, 118.0),
+            # > Image de l’objet sélectionné. Format : Rectangle.
+            # > Valeur de départ FR : (343.0, 54.0, 407.0, 118.0)
+
+            "objet_description_rectangle": (280.0, 130.0, 460.0, 400.0),
+            # > Description de l’objet à droite. Format : Rectangle.
+            # > Valeur de départ FR : (280.0, 130.0, 460.0, 400.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "objet_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 353.0, 123.0, 385.0)
+
+            "objet_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ FR : (124.0, 353.0, 251.0, 385.0)
+
+            "objet_aide_detail_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide détails. Format : Rectangle.
+            # > Valeur de départ FR : (252.0, 353.0, 390.0, 385.0)
+
+            "objet_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > GLOBAL
+            # =====================
+
+            "stats_onglet_actif_rectangle": (163.0, -29.0, 226.0, 2.0),
+            # > Surbrillance onglet STATISTIQUES actif. Format : Rectangle.
+            # > Valeur de départ FR : (163.0, -29.0, 226.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE  "STATISTIQUES"
+            # =====================
+
+            "stats_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE  "STATISTIQUES" > RIGHT ICON
+            # =====================
+
+            "stats_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP GAUCHE > LIST STAT TYPE
+            # =====================
+
+            "stats_liste_gauche_rectangle": (38.0, 32.0, 272.0, 285.0),
+            # > Liste catégories statistiques à gauche. Format : Rectangle.
+            # > Valeur de départ FR : (38.0, 32.0, 272.0, 285.0)
+
+            "stats_item_gauche_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une catégorie statistiques gauche. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 234.0, 28.0)
+
+            "stats_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 52.0, 36.0, 72.0)
+
+            "stats_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ FR : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP DROITE > DETAIL STAT TYPE
+            # =====================
+
+            "stats_liste_droite_rectangle": (270.0, 32.0, 490.0, 286.0),
+            # > Zone valeurs statistiques à droite. Format : Rectangle.
+            # > Valeur de départ FR : (270.0, 32.0, 490.0, 286.0)
+
+            "stats_item_droite_rectangle": (0.0, 0.0, 220.0, 24.0),
+            # > Taille d’une ligne statistique droite. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 220.0, 24.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "stats_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide page. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 353.0, 170.0, 385.0)
+
+            "stats_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ FR : (171.0, 353.0, 340.0, 385.0)
+
+            "stats_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU OPTION > GLOBAL
+            # =====================
+
+            "option_ecran_rectangle": (128.0, 92.0, 512.0, 316.0),
+            # > Zone écran OPTIONS. Format : Rectangle.
+            # > Valeur de départ FR : (128.0, 92.0, 512.0, 316.0)
+
+            "option_liste_rectangle": (-32.0, 32.0, 416.0, 206.0),
+            # > Zone de la liste OPTIONS. Format : Rectangle.
+            # > Valeur de départ FR : (-32.0, 32.0, 416.0, 206.0)
+
+            "option_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Audio/Rumble/Difficulté/Contrôleur. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # OPTION > AUDIO
+            # =====================
+
+            "audio_ecran_rectangle": (130.0, 92.0, 510.0, 313.0),
+            # > Zone écran AUDIO. Format : Rectangle.
+            # > Valeur de départ FR : (130.0, 92.0, 510.0, 313.0)
+
+            "audio_liste_rectangle": (30.0, 50.0, 150.0, 171.0),
+            # > Liste des 3 réglages audio. Format : Rectangle.
+            # > Valeur de départ FR : (30.0, 50.0, 150.0, 171.0)
+
+            "audio_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille d’une ligne audio. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 120.0, 40.0)
+
+            "audio_fleche_gauche_1_rectangle": (165.0, 63.0, 181.0, 79.0),
+            # > Flèche gauche ligne 1. Format : Rectangle.
+            # > Valeur de départ FR : (165.0, 63.0, 181.0, 79.0)
+
+            "audio_fleche_gauche_2_rectangle": (165.0, 103.0, 181.0, 119.0),
+            # > Flèche gauche ligne 2. Format : Rectangle.
+            # > Valeur de départ FR : (165.0, 103.0, 181.0, 119.0)
+
+            "audio_fleche_gauche_3_rectangle": (165.0, 143.0, 181.0, 159.0),
+            # > Flèche gauche ligne 3. Format : Rectangle.
+            # > Valeur de départ FR : (165.0, 143.0, 181.0, 159.0)
+
+            "audio_fleche_droite_1_rectangle": (329.0, 63.0, 345.0, 79.0),
+            # > Flèche droite ligne 1. Format : Rectangle.
+            # > Valeur de départ FR : (329.0, 63.0, 345.0, 79.0)
+
+            "audio_fleche_droite_2_rectangle": (329.0, 103.0, 345.0, 119.0),
+            # > Flèche droite ligne 2. Format : Rectangle.
+            # > Valeur de départ FR : (329.0, 103.0, 345.0, 119.0)
+
+            "audio_fleche_droite_3_rectangle": (329.0, 143.0, 345.0, 159.0),
+            # > Flèche droite ligne 3. Format : Rectangle.
+            # > Valeur de départ FR : (329.0, 143.0, 345.0, 159.0)
+
+            "audio_aide_gauche_droite_rectangle": (-86.0, 231.0, 190.0, 261.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ FR : (-86.0, 231.0, 190.0, 261.0)
+
+            "audio_aide_retour_rectangle": (191.0, 231.0, 319.0, 261.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (191.0, 231.0, 319.0, 261.0)
+
+            "audio_aide_selection_rectangle": (320.0, 231.0, 468.0, 261.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (320.0, 231.0, 468.0, 261.0)
+
+
+            # =====================
+            # OPTION > DIFICULTE
+            # =====================
+
+            "difficulte_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ FR : (130.0, 92.0, 510.0, 233.0)
+
+            "difficulte_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ FR : (30.0, 60.0, 150.0, 101.0)
+
+            "difficulte_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 120.0, 40.0)
+
+            "difficulte_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ FR : (165.0, 73.0, 181.0, 89.0)
+
+            "difficulte_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ FR : (329.0, 73.0, 345.0, 89.0)
+
+            "difficulte_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ FR : (-30.0, 151.0, 116.0, 181.0)
+
+            "difficulte_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (117.0, 151.0, 264.0, 181.0)
+
+            "difficulte_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # OPTION CONTROLLER
+            # =====================
+
+            "controleur_ecran_rectangle": (48.0, 132.0, 592.0, 328.0),
+            # > Zone écran contrôleur. Format : Rectangle.
+            # > Valeur de départ FR : (48.0, 132.0, 592.0, 328.0)
+
+            "controleur_liste_rectangle": (105.0, 70.0, 245.0, 154.0),
+            # > Liste options contrôleur. Format : Rectangle.
+            # > Valeur de départ FR : (105.0, 70.0, 245.0, 154.0)
+
+            "controleur_item_rectangle": (0.0, 0.0, 140.0, 28.0),
+            # > Taille d’une ligne contrôleur. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 140.0, 28.0)
+
+            "controleur_aide_haut_bas_rectangle": (0.0, 206.0, 136.0, 236.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 206.0, 136.0, 236.0)
+
+            "controleur_aide_cycle_rectangle": (137.0, 206.0, 273.0, 236.0),
+            # > Aide cycle. Format : Rectangle.
+            # > Valeur de départ FR : (137.0, 206.0, 273.0, 236.0)
+
+            "controleur_aide_retour_rectangle": (274.0, 206.0, 409.0, 236.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (274.0, 206.0, 409.0, 236.0)
+
+            "controleur_aide_selection_rectangle": (410.0, 206.0, 545.0, 236.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (410.0, 206.0, 545.0, 236.0)
+
+
+            # =====================
+            # OPTION CONTROLLER > VIBRATION
+            # =====================
+
+            "vibration_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran VIBRATION. Format : Rectangle.
+            # > Valeur de départ FR : (130.0, 92.0, 510.0, 233.0)
+
+            "vibration_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste VIBRATION. Format : Rectangle.
+            # > Valeur de départ FR : (30.0, 60.0, 150.0, 101.0)
+
+            "vibration_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne VIBRATION. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 120.0, 40.0)
+
+            "vibration_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ FR : (165.0, 73.0, 181.0, 89.0)
+
+            "vibration_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ FR : (329.0, 73.0, 345.0, 89.0)
+
+            "vibration_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ FR : (-30.0, 151.0, 116.0, 181.0)
+
+            "vibration_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (117.0, 151.0, 264.0, 181.0)
+
+            "vibration_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # MENU OPTION > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "option_aide_haut_bas_rectangle": (-30.0, 234.0, 118.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ FR : (-30.0, 234.0, 118.0, 264.0)
+
+            "option_aide_retour_rectangle": (119.0, 234.0, 266.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (119.0, 234.0, 266.0, 264.0)
+
+            "option_aide_selection_rectangle": (267.0, 234.0, 414.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (267.0, 234.0, 414.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PHOTO > GLOBAL
+            # =====================
+
+            "photo_menu_ecran_rectangle": (128.0, 128.0, 512.0, 272.0),
+            # > Zone écran choix PHOTO. Format : Rectangle.
+            # > Valeur de départ FR : (128.0, 128.0, 512.0, 272.0)
+
+            "photo_menu_liste_rectangle": (-32.0, 32.0, 416.0, 128.0),
+            # > Zone liste Album/Galerie. Format : Rectangle.
+            # > Valeur de départ FR : (-32.0, 32.0, 416.0, 128.0)
+
+            "photo_menu_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Album/Galerie. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # PHOTO > CHOIX MENU PHOTO GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # PHOTO > ALBUM
+            # =====================
+
+            "photo_album_ecran_rectangle": (64.0, 64.0, 576.0, 384.0),
+            # > Zone complète album photo. Format : Rectangle.
+            # > Valeur de départ FR : (64.0, 64.0, 576.0, 384.0)
+
+            "photo_album_titre_rectangle": (52.0, 43.0, 466.0, 73.0),
+            # > Zone titre album. Format : Rectangle.
+            # > Valeur de départ FR : (52.0, 43.0, 466.0, 73.0)
+
+            "photo_album_scroll_gauche_rectangle": (22.0, 30.0, 38.0, 46.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ FR : (22.0, 30.0, 38.0, 46.0)
+
+            "photo_album_scroll_droite_rectangle": (475.0, 30.0, 491.0, 46.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ FR : (475.0, 30.0, 491.0, 46.0)
+
+            "photo_album_scroll_haut_rectangle": (30.0, 78.0, 46.0, 94.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ FR : (30.0, 78.0, 46.0, 94.0)
+
+            "photo_album_scroll_bas_rectangle": (30.0, 232.0, 46.0, 248.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ FR : (30.0, 232.0, 46.0, 248.0)
+
+            "photo_album_photo_1_rectangle": (72.0, 68.0, 190.0, 158.0),
+            # > Vignette photo 1. Format : Rectangle.
+            # > Valeur de départ FR : (72.0, 68.0, 190.0, 158.0)
+
+            "photo_album_photo_2_rectangle": (200.0, 68.0, 318.0, 158.0),
+            # > Vignette photo 2. Format : Rectangle.
+            # > Valeur de départ FR : (200.0, 68.0, 318.0, 158.0)
+
+            "photo_album_photo_3_rectangle": (328.0, 68.0, 446.0, 158.0),
+            # > Vignette photo 3. Format : Rectangle.
+            # > Valeur de départ FR : (328.0, 68.0, 446.0, 158.0)
+
+            "photo_album_photo_4_rectangle": (72.0, 168.0, 190.0, 258.0),
+            # > Vignette photo 4. Format : Rectangle.
+            # > Valeur de départ FR : (72.0, 168.0, 190.0, 258.0)
+
+            "photo_album_photo_5_rectangle": (200.0, 168.0, 318.0, 258.0),
+            # > Vignette photo 5. Format : Rectangle.
+            # > Valeur de départ FR : (200.0, 168.0, 318.0, 258.0)
+
+            "photo_album_photo_6_rectangle": (328.0, 168.0, 446.0, 258.0),
+            # > Vignette photo 6. Format : Rectangle.
+            # > Valeur de départ FR : (328.0, 168.0, 446.0, 258.0)
+
+
+            # =====================
+            # PHOTO > GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU PHOTO > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "photo_menu_aide_haut_bas_rectangle": (-20.0, 154.0, 128.0, 184.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ FR : (-20.0, 154.0, 128.0, 184.0)
+
+            "photo_menu_aide_retour_rectangle": (129.0, 154.0, 256.0, 184.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (129.0, 154.0, 256.0, 184.0)
+
+            "photo_menu_aide_selection_rectangle": (257.0, 154.0, 404.0, 184.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (257.0, 154.0, 404.0, 184.0)
+
+            "photo_album_aide_navigation_rectangle": (32.0, 330.0, 190.0, 360.0),
+            # > Aide navigation. Format : Rectangle.
+            # > Valeur de départ FR : (32.0, 330.0, 190.0, 360.0)
+
+            "photo_album_aide_zoom_rectangle": (201.0, 330.0, 318.0, 360.0),
+            # > Aide zoom. Format : Rectangle.
+            # > Valeur de départ FR : (201.0, 330.0, 318.0, 360.0)
+
+            "photo_album_aide_retour_rectangle": (318.0, 330.0, 447.0, 360.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (318.0, 330.0, 447.0, 360.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU EXTRA > GLOBAL
+            # =====================
+
+            "extra_ecran_rectangle": (64.0, 128.0, 576.0, 352.0),
+            # > Zone complète EXTRA. Format : Rectangle.
+            # > Valeur de départ FR : (64.0, 128.0, 576.0, 352.0)
+
+            "extra_liste_rectangle": (32.0, 32.0, 480.0, 195.0),
+            # > Zone liste EXTRA. Format : Rectangle.
+            # > Valeur de départ FR : (32.0, 32.0, 480.0, 195.0)
+
+            "extra_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille Concept Art/Personnage/Bonus/Crédits. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # EXTRA > COMCEPT ART
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > PERSONNAGE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > OPTION BONUS
+            # =====================
+
+            "bonus_ecran_rectangle": (110.0, 72.0, 530.0, 253.0),
+            # > Zone écran options bonus. Format : Rectangle.
+            # > Valeur de départ FR : (110.0, 72.0, 530.0, 253.0)
+
+            "bonus_liste_rectangle": (30.0, 60.0, 190.0, 141.0),
+            # > Zone liste options bonus. Format : Rectangle.
+            # > Valeur de départ FR : (30.0, 60.0, 190.0, 141.0)
+
+            "bonus_item_rectangle": (0.0, 0.0, 160.0, 40.0),
+            # > Taille d’une option bonus. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 0.0, 160.0, 40.0)
+
+            "bonus_aide_gauche_droite_rectangle": (0.0, 191.0, 140.0, 221.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 191.0, 140.0, 221.0)
+
+            "bonus_aide_retour_rectangle": (141.0, 191.0, 280.0, 221.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (141.0, 191.0, 280.0, 221.0)
+
+            "bonus_aide_selection_rectangle": (281.0, 191.0, 420.0, 221.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (281.0, 191.0, 420.0, 221.0)
+
+
+            # =====================
+            # EXTRA > OREDIT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU EXTRA > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "extra_aide_haut_bas_rectangle": (0.0, 236.0, 170.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 236.0, 170.0, 264.0)
+
+            "extra_aide_retour_rectangle": (171.0, 236.0, 340.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ FR : (171.0, 236.0, 340.0, 264.0)
+
+            "extra_aide_selection_rectangle": (341.0, 236.0, 512.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ FR : (341.0, 236.0, 512.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU SAUVEGARDE / CHARGEMENT > GLOBAL
+            # =====================
+
+            "sauvegarde_ecran_rectangle": (64.0, 79.0, 576.0, 401.0),
+            # > Zone écran sauvegarde/chargement. Format : Rectangle.
+            # > Valeur de départ FR : (64.0, 79.0, 576.0, 401.0)
+
+            "sauvegarde_liste_rectangle": (55.0, 113.0, 457.0, 281.0),
+            # > Zone liste sauvegardes. Format : Rectangle.
+            # > Valeur de départ FR : (55.0, 113.0, 457.0, 281.0)
+
+            "sauvegarde_fleche_gauche_rectangle": (23.0, 30.0, 55.0, 62.0),
+            # > Flèche page gauche. Format : Rectangle.
+            # > Valeur de départ FR : (23.0, 30.0, 55.0, 62.0)
+
+            "sauvegarde_fleche_droite_rectangle": (457.0, 30.0, 489.0, 62.0),
+            # > Flèche page droite. Format : Rectangle.
+            # > Valeur de départ FR : (457.0, 30.0, 489.0, 62.0)
+
+            "sauvegarde_fleche_haut_rectangle": (31.0, 121.0, 46.0, 137.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ FR : (31.0, 121.0, 46.0, 137.0)
+
+            "sauvegarde_fleche_bas_rectangle": (31.0, 257.0, 46.0, 273.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ FR : (31.0, 257.0, 46.0, 273.0)
+
+            "sauvegarde_info_rectangle": (-42.0, 50.0, 554.0, 70.0),
+            # > Zone texte information. Format : Rectangle.
+            # > Valeur de départ FR : (-42.0, 50.0, 554.0, 70.0)
+
+            "sauvegarde_espace_libre_rectangle": (50.0, 281.0, 346.0, 309.0),
+            # > Zone texte espace libre. Format : Rectangle.
+            # > Valeur de départ FR : (50.0, 281.0, 346.0, 309.0)
+
+            "sauvegarde_bouton_sauver_rectangle": (0.0, 332.0, 170.0, 362.0),
+            # > Bouton SAUVER/CHARGER gauche. Format : Rectangle.
+            # > Valeur de départ FR : (0.0, 332.0, 170.0, 362.0)
+
+            "sauvegarde_bouton_supprimer_rectangle": (171.0, 332.0, 384.0, 362.0),
+            # > Bouton SUPPRIMER. Format : Rectangle.
+            # > Valeur de départ FR : (171.0, 332.0, 384.0, 362.0)
+
+            "sauvegarde_bouton_annuler_rectangle": (385.0, 332.0, 512.0, 362.0),
+            # > Bouton ANNULER. Format : Rectangle.
+            # > Valeur de départ FR : (385.0, 332.0, 512.0, 362.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL HAUTEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL LARGEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ACTIVE
+            # =====================
+
+            "gdef_s_x": 0.55,  # Aides/boutons sélectionnés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL INACTIVE
+            # =====================
+
+            "gdef_gy_x": 0.48,  # Aides/boutons grisés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL SIZE
+            # =====================
+
+            "gdef_w_x": 0.48,  # Aides/boutons blancs. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ESPACEMENT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ICON
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # TAILLES TEXTE GLOBALES
+            # =====================
+
+            # Grands titres normaux. Format : décimal, exemple 0.40.
+            "title_x": 0.2,
+
+            "title_gr_x": 0.2,  # Grands titres grisés. Format : décimal.
+
+            "title_s_x": 0.3,  # Grands titres sélectionnés. Format : décimal.
+
+            "stitle_x": 0.22,  # Titres de menu normaux. Format : décimal.
+
+            # Titres de menu sélectionnés. Format : décimal.
+            "stitle_s_x": 0.22,
+
+            "stitle_g_x": 0.22,  # Titres de menu grisés. Format : décimal.
+
+            "stitlesm_x": 0.16,  # Petits sous-titres. Format : décimal.
+
+            # Textes quêtes/onglets normaux. Format : décimal.
+            "ititle_x": 0.12,
+
+            # Textes quêtes/onglets sélectionnés. Format : décimal.
+            "ititle_s_x": 0.12,
+
+            # Textes quêtes/onglets grisés. Format : décimal.
+            "ititle_g_x": 0.12,
+
+            # Descriptions/statistiques blanches. Format : décimal.
+            "desc_wht_x": 0.38,
+
+            # Descriptions/statistiques grisées. Format : décimal.
+            "desc_gry_x": 0.38,
+
         },
         "de": {
-            "edition": "SLES_526.43",       # Edition PS2 allemande source.
-            "largeur_menu": 300.0,          # Boutons élargis à 300 pixels.
-            "pause": (10.0, 310.0),         # Menu Pause élargi.
-            "principal": (161.0, 461.0),    # Menu principal élargi.
-            # Titre supérieur droit du Livre noir.
-            "title_x": 0.20,
-            "title_gr_x": 0.20,             # Même titre lorsqu'il est grisé.
-            # Même titre lorsqu'il est sélectionné.
-            "title_s_x": 0.30,
-            "stitle_x": 0.20,               # Choix principaux allemands.
-            "stitle_s_x": 0.20,             # Choix sélectionnés.
-            "stitle_g_x": 0.20,             # Choix désactivés.
-            "stitlesm_x": 0.15,             # Petits sous-titres compacts.
-            "ititle_x": 0.12,               # Statistiques/objectifs/onglets.
-            "ititle_s_x": 0.12,             # Petits textes sélectionnés.
-            "ititle_g_x": 0.12,             # Petits textes désactivés.
-            "gdef_w_x": 0.46,               # Légendes allemandes des touches.
-            "gdef_s_x": 0.53,               # Bouton sélectionné en orange.
-            "gdef_gy_x": 0.46,              # Bouton grisé/désactivé.
-            # Colonne Stats, mots allemands longs.
+
+            # =====================
+            # LANGUE
+            # =====================
+
+            "edition": "SLES_526.43",  # Edition PS2 source pour ce profil.
+
+
+            # =====================
+            # MENU PRINCIPAL  GLOBAL
+            # =====================
+
+            "menu_principal_rectangle": (161.0, 250.0, 461.0, 355.0),
+            # > Zone complète du menu principal. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (161.0, 250.0, 461.0, 355.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > NOUVELLE PARTIE
+            # =====================
+
+            "menu_principal_nouvelle_partie_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton NOUVELLE PARTIE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+            "menu_principal_texte_demarrer_rectangle": (84.0, 285.0, 576.0, 320.0),
+            # > Zone du texte/indication de démarrage. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (84.0, 285.0, 576.0, 320.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > CHARGER
+            # =====================
+
+            "menu_principal_charger_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton CHARGER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > QUITTER
+            # =====================
+
+            "menu_principal_quitter_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PAUSE > GLOBAL
+            # =====================
+
+            "menu_pause_ecran_rectangle": (160.0, 101.0, 480.0, 379.0),
+            # > Zone écran du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (160.0, 101.0, 480.0, 379.0)
+
+            "menu_pause_liste_rectangle": (10.0, 32.0, 310.0, 243.0),
+            # > Zone contenant les 6 choix du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (10.0, 32.0, 310.0, 243.0)
+
+
+            # =====================
+            # MENU PAUSE > LIVRE NOIR
+            # =====================
+
+            "menu_pause_bouton_1_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton LIVRE NOIR. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > SAUVEGARDE
+            # =====================
+
+            "menu_pause_bouton_2_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton SAUVEGARDE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > OPTION
+            # =====================
+
+            "menu_pause_bouton_3_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton OPTION. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > PHOTO
+            # =====================
+
+            "menu_pause_bouton_4_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton PHOTO. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > EXTRA
+            # =====================
+
+            "menu_pause_bouton_5_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton EXTRA. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > QUITTER
+            # =====================
+
+            "menu_pause_bouton_6_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "menu_pause_aide_haut_bas_rectangle": (-80.0, 288.0, 86.0, 318.0),
+            # > Zone aide HAUT/BAS. Format : Rectangle.
+            # > Valeur de départ DE : (-80.0, 288.0, 86.0, 318.0)
+
+            "menu_pause_aide_retour_rectangle": (87.0, 288.0, 233.0, 318.0),
+            # > Zone aide RETOUR. Format : Rectangle.
+            # > Valeur de départ DE : (87.0, 288.0, 233.0, 318.0)
+
+            "menu_pause_aide_selection_rectangle": (234.0, 288.0, 400.0, 318.0),
+            # > Zone aide SÉLECTION. Format : Rectangle.
+            # > Valeur de départ DE : (234.0, 288.0, 400.0, 318.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU LIVRE NOIR > GLOBAL
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR GLOBAL FOND RECTANGLE BLEU
+            # =====================
+
+            "livre_noir_fond_rectangle": (64.0, 63.0, 576.0, 407.0),
+            # > Fond/zone principale bleue du Livre noir. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ DE : (64.0, 63.0, 576.0, 407.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS >
+            # =====================
+
+            "livre_noir_item_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une entrée générique des listes Livre noir ; hauteur = pas vertical de base. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 234.0, 28.0)
+
+            "livre_noir_item_icone_rectangle": (0.0, 4.0, 20.0, 24.0),
+            # > Zone de l’icône interne d’une entrée de liste. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 4.0, 20.0, 24.0)
+
+            "livre_noir_item_texte_marge_rectangle": (25.0, 0.0, 25.0, 0.0),
+            # > Marge/zone interne du texte d’une entrée ; 25.0 réserve la place de l’icône. Format : Rectangle.
+            # > Valeur de départ DE : (25.0, 0.0, 25.0, 0.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON ACTIVE HAUT GAUCHE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON INACTIVE HAUT GAUCHE
+            # =====================
+
+            "onglet_quete_inactif_rectangle": (55.0, -29.0, 83.0, 2.0),
+            # > Icône onglet AND NOW inactif. Format : Rectangle.
+            # > Valeur de départ DE : (55.0, -29.0, 83.0, 2.0)
+
+            "onglet_filles_inactif_rectangle": (87.0, -29.0, 115.0, 2.0),
+            # > Icône onglet FILLES inactif. Format : Rectangle.
+            # > Valeur de départ DE : (87.0, -29.0, 115.0, 2.0)
+
+            "onglet_tenue_inactif_rectangle": (118.0, -29.0, 146.0, 2.0),
+            # > Icône onglet TENUE inactif. Format : Rectangle.
+            # > Valeur de départ DE : (118.0, -29.0, 146.0, 2.0)
+
+            "onglet_objet_inactif_rectangle": (148.0, -29.0, 176.0, 2.0),
+            # > Icône onglet OBJET inactif. Format : Rectangle.
+            # > Valeur de départ DE : (148.0, -29.0, 176.0, 2.0)
+
+            "onglet_stats_inactif_rectangle": (180.0, -29.0, 208.0, 2.0),
+            # > Icône onglet STATISTIQUES inactif. Format : Rectangle.
+            # > Valeur de départ DE : (180.0, -29.0, 208.0, 2.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > GLOBAL
+            # =====================
+
+            "quete_onglet_actif_rectangle": (38.0, -29.0, 101.0, 2.0),
+            # > Surbrillance de l’onglet AND NOW actif. Format : Rectangle.
+            # > Valeur de départ DE : (38.0, -29.0, 101.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE
+            # =====================
+
+            "quete_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE > ICON A DROITE
+            # =====================
+
+            "quete_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > SCROLL BOUTTON QUÊTES GAUCHE
+            # =====================
+
+            "quete_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Bouton/flèche HAUT. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 52.0, 36.0, 72.0)
+
+            "quete_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Bouton/flèche BAS. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP GAUCHE > QUÊTES
+            # =====================
+
+            "quete_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Zone complète de la liste des quêtes. Format : Rectangle.
+            # > Valeur de départ DE : (38.0, 32.0, 272.0, 286.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > SOUS-TITRE DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_sous_titre_rectangle": (280.0, 25.0, 460.0, 65.0),
+            # > Zone du sous-titre visible au-dessus de la description. Format : Rectangle.
+            # > Valeur de départ DE : (280.0, 25.0, 460.0, 65.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_description_rectangle": (280.0, 75.0, 482.0, 350.0),
+            # > Zone du texte de description à droite. Format : Rectangle.
+            # > Valeur de départ DE : (280.0, 75.0, 482.0, 350.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "quete_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide PAGE gauche. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 353.0, 170.0, 385.0)
+
+            "quete_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide HAUT/BAS centre. Format : Rectangle.
+            # > Valeur de départ DE : (171.0, 353.0, 340.0, 385.0)
+
+            "quete_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide RETOUR droite. Format : Rectangle.
+            # > Valeur de départ DE : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > GLOBAL
+            # =====================
+
+            "fille_onglet_actif_rectangle": (70.0, -29.0, 133.0, 2.0),
+            # > Surbrillance onglet FILLES actif. Format : Rectangle.
+            # > Valeur de départ DE : (70.0, -29.0, 133.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE  "FILLES"
+            # =====================
+
+            "fille_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE > ICON A DROITE "FILLES"
+            # =====================
+
+            "fille_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP GAUCHE > lISTE FILLE
+            # =====================
+
+            "fille_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des filles à gauche. Format : Rectangle.
+            # > Valeur de départ DE : (38.0, 32.0, 272.0, 286.0)
+
+            "fille_image_principale_rectangle": (311.0, 22.0, 439.0, 150.0),
+            # > Grande image/portrait à droite. Format : Rectangle.
+            # > Valeur de départ DE : (311.0, 22.0, 439.0, 150.0)
+
+            "fille_icone_rectangle": (343.0, 210.0, 407.0, 274.0),
+            # > Icône/image secondaire à droite. Format : Rectangle.
+            # > Valeur de départ DE : (343.0, 210.0, 407.0, 274.0)
+
+            "fille_token_texte_rectangle": (311.0, 285.0, 439.0, 315.0),
+            # > Zone texte/token en bas à droite. Format : Rectangle.
+            # > Valeur de départ DE : (311.0, 285.0, 439.0, 315.0)
+
+            "fille_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche HAUT. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 52.0, 36.0, 72.0)
+
+            "fille_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche BAS. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP DROITE > HISTORIQUE
+            # =====================
+
+            "fille_texte_milieu_rectangle": (311.0, 175.0, 439.0, 205.0),
+            # > Zone texte centrale à droite. Format : Rectangle.
+            # > Valeur de départ DE : (311.0, 175.0, 439.0, 205.0)
+
+            "fille_historique_fond_rectangle": (48.0, 36.0, 592.0, 377.0),
+            # > Zone écran historique fille. Format : Rectangle.
+            # > Valeur de départ DE : (48.0, 36.0, 592.0, 377.0)
+
+            "fille_historique_titre_rectangle": (335.0, 90.0, 463.0, 110.0),
+            # > Titre/nom dans historique. Format : Rectangle.
+            # > Valeur de départ DE : (335.0, 90.0, 463.0, 110.0)
+
+            "fille_historique_image_rectangle": (335.0, 120.0, 463.0, 248.0),
+            # > Image historique. Format : Rectangle.
+            # > Valeur de départ DE : (335.0, 120.0, 463.0, 248.0)
+
+            "fille_historique_liste_titre_rectangle": (38.0, 30.0, 272.0, 55.0),
+            # > Titre liste historique. Format : Rectangle.
+            # > Valeur de départ DE : (38.0, 30.0, 272.0, 55.0)
+
+            "fille_historique_liste_rectangle": (38.0, 70.0, 272.0, 295.0),
+            # > Liste historique. Format : Rectangle.
+            # > Valeur de départ DE : (38.0, 70.0, 272.0, 295.0)
+
+            "fille_historique_scroll_haut_rectangle": (16.0, 90.0, 36.0, 110.0),
+            # > Flèche haut historique. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 90.0, 36.0, 110.0)
+
+            "fille_historique_scroll_bas_rectangle": (16.0, 260.0, 36.0, 280.0),
+            # > Flèche bas historique. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 260.0, 36.0, 280.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "fille_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 353.0, 123.0, 385.0)
+
+            "fille_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ DE : (124.0, 353.0, 251.0, 385.0)
+
+            "fille_aide_selection_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (252.0, 353.0, 390.0, 385.0)
+
+            "fille_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > GLOBAL
+            # =====================
+
+            "tenue_onglet_actif_rectangle": (101.0, -29.0, 164.0, 2.0),
+            # > Surbrillance onglet TENUE actif. Format : Rectangle.
+            # > Valeur de départ DE : (101.0, -29.0, 164.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE  "TENU"
+            # =====================
+
+            "tenue_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE > ICON A DROITE "TENU"
+            # =====================
+
+            "tenue_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP GAUCHE > LISTE TENU
+            # =====================
+
+            "tenue_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des tenues à gauche. Format : Rectangle.
+            # > Valeur de départ DE : (38.0, 32.0, 272.0, 286.0)
+
+            "tenue_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 52.0, 36.0, 72.0)
+
+            "tenue_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP DROITE > AFFICHE TENU
+            # =====================
+
+            "tenue_sous_titre_rectangle": (291.0, 247.0, 495.0, 262.0),
+            # > Sous-titre ACCESSOIRES affiché dans le corps droit.
+
+            "tenue_accessoire_1_rectangle": (291.0, 262.0, 336.0, 314.0),
+            # > Emplacement accessoire 1. Format : Rectangle.
+            # > Valeur de départ DE : (291.0, 262.0, 336.0, 314.0)
+
+            "tenue_accessoire_2_rectangle": (344.0, 262.0, 389.0, 314.0),
+            # > Emplacement accessoire 2. Format : Rectangle.
+            # > Valeur de départ DE : (344.0, 262.0, 389.0, 314.0)
+
+            "tenue_accessoire_3_rectangle": (397.0, 262.0, 442.0, 314.0),
+            # > Emplacement accessoire 3. Format : Rectangle.
+            # > Valeur de départ DE : (397.0, 262.0, 442.0, 314.0)
+
+            "tenue_accessoire_4_rectangle": (450.0, 262.0, 495.0, 314.0),
+            # > Emplacement accessoire 4. Format : Rectangle.
+            # > Valeur de départ DE : (450.0, 262.0, 495.0, 314.0)
+
+
+            # =====================
+            # LIVRE NOIR > OONGLET TENU > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > GLOBAL
+            # =====================
+
+            "objet_onglet_actif_rectangle": (131.0, -29.0, 194.0, 2.0),
+            # > Surbrillance onglet OBJET actif. Format : Rectangle.
+            # > Valeur de départ DE : (131.0, -29.0, 194.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE  "OBJETS"
+            # =====================
+
+            "objet_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE  "OBJETS" > RIGHT ICON
+            # =====================
+
+            "objet_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP GAUCHE > LIST OBJET
+            # =====================
+
+            "objet_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des objets à gauche. Format : Rectangle.
+            # > Valeur de départ DE : (38.0, 32.0, 272.0, 286.0)
+
+            "objet_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 52.0, 36.0, 72.0)
+
+            "objet_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP DROITE > DESCRIPTION OBJET
+            # =====================
+
+            "objet_image_rectangle": (343.0, 54.0, 407.0, 118.0),
+            # > Image de l’objet sélectionné. Format : Rectangle.
+            # > Valeur de départ DE : (343.0, 54.0, 407.0, 118.0)
+
+            "objet_description_rectangle": (280.0, 130.0, 460.0, 400.0),
+            # > Description de l’objet à droite. Format : Rectangle.
+            # > Valeur de départ DE : (280.0, 130.0, 460.0, 400.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "objet_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 353.0, 123.0, 385.0)
+
+            "objet_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ DE : (124.0, 353.0, 251.0, 385.0)
+
+            "objet_aide_detail_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide détails. Format : Rectangle.
+            # > Valeur de départ DE : (252.0, 353.0, 390.0, 385.0)
+
+            "objet_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > GLOBAL
+            # =====================
+
+            "stats_onglet_actif_rectangle": (163.0, -29.0, 226.0, 2.0),
+            # > Surbrillance onglet STATISTIQUES actif. Format : Rectangle.
+            # > Valeur de départ DE : (163.0, -29.0, 226.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE  "STATISTIQUES"
+            # =====================
+
+            "stats_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE  "STATISTIQUES" > RIGHT ICON
+            # =====================
+
+            "stats_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP GAUCHE > LIST STAT TYPE
+            # =====================
+
+            "stats_liste_gauche_rectangle": (38.0, 32.0, 272.0, 285.0),
+            # > Liste catégories statistiques à gauche. Format : Rectangle.
+            # > Valeur de départ DE : (38.0, 32.0, 272.0, 285.0)
+
+            "stats_item_gauche_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une catégorie statistiques gauche. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 234.0, 28.0)
+
+            "stats_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 52.0, 36.0, 72.0)
+
+            "stats_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ DE : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP DROITE > DETAIL STAT TYPE
+            # =====================
+
+            "stats_liste_droite_rectangle": (270.0, 32.0, 490.0, 286.0),
+            # > Zone valeurs statistiques à droite. Format : Rectangle.
+            # > Valeur de départ DE : (270.0, 32.0, 490.0, 286.0)
+
+            "stats_item_droite_rectangle": (0.0, 0.0, 220.0, 24.0),
+            # > Taille d’une ligne statistique droite. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 220.0, 24.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "stats_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide page. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 353.0, 170.0, 385.0)
+
+            "stats_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ DE : (171.0, 353.0, 340.0, 385.0)
+
+            "stats_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU OPTION > GLOBAL
+            # =====================
+
+            "option_ecran_rectangle": (128.0, 92.0, 512.0, 316.0),
+            # > Zone écran OPTIONS. Format : Rectangle.
+            # > Valeur de départ DE : (128.0, 92.0, 512.0, 316.0)
+
+            "option_liste_rectangle": (-32.0, 32.0, 416.0, 206.0),
+            # > Zone de la liste OPTIONS. Format : Rectangle.
+            # > Valeur de départ DE : (-32.0, 32.0, 416.0, 206.0)
+
+            "option_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Audio/Rumble/Difficulté/Contrôleur. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # OPTION > AUDIO
+            # =====================
+
+            "audio_ecran_rectangle": (130.0, 92.0, 510.0, 313.0),
+            # > Zone écran AUDIO. Format : Rectangle.
+            # > Valeur de départ DE : (130.0, 92.0, 510.0, 313.0)
+
+            "audio_liste_rectangle": (30.0, 50.0, 150.0, 171.0),
+            # > Liste des 3 réglages audio. Format : Rectangle.
+            # > Valeur de départ DE : (30.0, 50.0, 150.0, 171.0)
+
+            "audio_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille d’une ligne audio. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 120.0, 40.0)
+
+            "audio_fleche_gauche_1_rectangle": (165.0, 63.0, 181.0, 79.0),
+            # > Flèche gauche ligne 1. Format : Rectangle.
+            # > Valeur de départ DE : (165.0, 63.0, 181.0, 79.0)
+
+            "audio_fleche_gauche_2_rectangle": (165.0, 103.0, 181.0, 119.0),
+            # > Flèche gauche ligne 2. Format : Rectangle.
+            # > Valeur de départ DE : (165.0, 103.0, 181.0, 119.0)
+
+            "audio_fleche_gauche_3_rectangle": (165.0, 143.0, 181.0, 159.0),
+            # > Flèche gauche ligne 3. Format : Rectangle.
+            # > Valeur de départ DE : (165.0, 143.0, 181.0, 159.0)
+
+            "audio_fleche_droite_1_rectangle": (329.0, 63.0, 345.0, 79.0),
+            # > Flèche droite ligne 1. Format : Rectangle.
+            # > Valeur de départ DE : (329.0, 63.0, 345.0, 79.0)
+
+            "audio_fleche_droite_2_rectangle": (329.0, 103.0, 345.0, 119.0),
+            # > Flèche droite ligne 2. Format : Rectangle.
+            # > Valeur de départ DE : (329.0, 103.0, 345.0, 119.0)
+
+            "audio_fleche_droite_3_rectangle": (329.0, 143.0, 345.0, 159.0),
+            # > Flèche droite ligne 3. Format : Rectangle.
+            # > Valeur de départ DE : (329.0, 143.0, 345.0, 159.0)
+
+            "audio_aide_gauche_droite_rectangle": (-86.0, 231.0, 190.0, 261.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ DE : (-86.0, 231.0, 190.0, 261.0)
+
+            "audio_aide_retour_rectangle": (191.0, 231.0, 319.0, 261.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (191.0, 231.0, 319.0, 261.0)
+
+            "audio_aide_selection_rectangle": (320.0, 231.0, 468.0, 261.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (320.0, 231.0, 468.0, 261.0)
+
+
+            # =====================
+            # OPTION > DIFICULTE
+            # =====================
+
+            "difficulte_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ DE : (130.0, 92.0, 510.0, 233.0)
+
+            "difficulte_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ DE : (30.0, 60.0, 150.0, 101.0)
+
+            "difficulte_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 120.0, 40.0)
+
+            "difficulte_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ DE : (165.0, 73.0, 181.0, 89.0)
+
+            "difficulte_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ DE : (329.0, 73.0, 345.0, 89.0)
+
+            "difficulte_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ DE : (-30.0, 151.0, 116.0, 181.0)
+
+            "difficulte_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (117.0, 151.0, 264.0, 181.0)
+
+            "difficulte_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # OPTION CONTROLLER
+            # =====================
+
+            "controleur_ecran_rectangle": (48.0, 132.0, 592.0, 328.0),
+            # > Zone écran contrôleur. Format : Rectangle.
+            # > Valeur de départ DE : (48.0, 132.0, 592.0, 328.0)
+
+            "controleur_liste_rectangle": (105.0, 70.0, 245.0, 154.0),
+            # > Liste options contrôleur. Format : Rectangle.
+            # > Valeur de départ DE : (105.0, 70.0, 245.0, 154.0)
+
+            "controleur_item_rectangle": (0.0, 0.0, 140.0, 28.0),
+            # > Taille d’une ligne contrôleur. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 140.0, 28.0)
+
+            "controleur_aide_haut_bas_rectangle": (0.0, 206.0, 136.0, 236.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 206.0, 136.0, 236.0)
+
+            "controleur_aide_cycle_rectangle": (137.0, 206.0, 273.0, 236.0),
+            # > Aide cycle. Format : Rectangle.
+            # > Valeur de départ DE : (137.0, 206.0, 273.0, 236.0)
+
+            "controleur_aide_retour_rectangle": (274.0, 206.0, 409.0, 236.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (274.0, 206.0, 409.0, 236.0)
+
+            "controleur_aide_selection_rectangle": (410.0, 206.0, 545.0, 236.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (410.0, 206.0, 545.0, 236.0)
+
+
+            # =====================
+            # OPTION CONTROLLER > VIBRATION
+            # =====================
+
+            "vibration_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran VIBRATION. Format : Rectangle.
+            # > Valeur de départ DE : (130.0, 92.0, 510.0, 233.0)
+
+            "vibration_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste VIBRATION. Format : Rectangle.
+            # > Valeur de départ DE : (30.0, 60.0, 150.0, 101.0)
+
+            "vibration_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne VIBRATION. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 120.0, 40.0)
+
+            "vibration_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ DE : (165.0, 73.0, 181.0, 89.0)
+
+            "vibration_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ DE : (329.0, 73.0, 345.0, 89.0)
+
+            "vibration_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ DE : (-30.0, 151.0, 116.0, 181.0)
+
+            "vibration_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (117.0, 151.0, 264.0, 181.0)
+
+            "vibration_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # MENU OPTION > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "option_aide_haut_bas_rectangle": (-30.0, 234.0, 118.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ DE : (-30.0, 234.0, 118.0, 264.0)
+
+            "option_aide_retour_rectangle": (119.0, 234.0, 266.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (119.0, 234.0, 266.0, 264.0)
+
+            "option_aide_selection_rectangle": (267.0, 234.0, 414.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (267.0, 234.0, 414.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PHOTO > GLOBAL
+            # =====================
+
+            "photo_menu_ecran_rectangle": (128.0, 128.0, 512.0, 272.0),
+            # > Zone écran choix PHOTO. Format : Rectangle.
+            # > Valeur de départ DE : (128.0, 128.0, 512.0, 272.0)
+
+            "photo_menu_liste_rectangle": (-32.0, 32.0, 416.0, 128.0),
+            # > Zone liste Album/Galerie. Format : Rectangle.
+            # > Valeur de départ DE : (-32.0, 32.0, 416.0, 128.0)
+
+            "photo_menu_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Album/Galerie. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # PHOTO > CHOIX MENU PHOTO GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # PHOTO > ALBUM
+            # =====================
+
+            "photo_album_ecran_rectangle": (64.0, 64.0, 576.0, 384.0),
+            # > Zone complète album photo. Format : Rectangle.
+            # > Valeur de départ DE : (64.0, 64.0, 576.0, 384.0)
+
+            "photo_album_titre_rectangle": (52.0, 43.0, 466.0, 73.0),
+            # > Zone titre album. Format : Rectangle.
+            # > Valeur de départ DE : (52.0, 43.0, 466.0, 73.0)
+
+            "photo_album_scroll_gauche_rectangle": (22.0, 30.0, 38.0, 46.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ DE : (22.0, 30.0, 38.0, 46.0)
+
+            "photo_album_scroll_droite_rectangle": (475.0, 30.0, 491.0, 46.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ DE : (475.0, 30.0, 491.0, 46.0)
+
+            "photo_album_scroll_haut_rectangle": (30.0, 78.0, 46.0, 94.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ DE : (30.0, 78.0, 46.0, 94.0)
+
+            "photo_album_scroll_bas_rectangle": (30.0, 232.0, 46.0, 248.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ DE : (30.0, 232.0, 46.0, 248.0)
+
+            "photo_album_photo_1_rectangle": (72.0, 68.0, 190.0, 158.0),
+            # > Vignette photo 1. Format : Rectangle.
+            # > Valeur de départ DE : (72.0, 68.0, 190.0, 158.0)
+
+            "photo_album_photo_2_rectangle": (200.0, 68.0, 318.0, 158.0),
+            # > Vignette photo 2. Format : Rectangle.
+            # > Valeur de départ DE : (200.0, 68.0, 318.0, 158.0)
+
+            "photo_album_photo_3_rectangle": (328.0, 68.0, 446.0, 158.0),
+            # > Vignette photo 3. Format : Rectangle.
+            # > Valeur de départ DE : (328.0, 68.0, 446.0, 158.0)
+
+            "photo_album_photo_4_rectangle": (72.0, 168.0, 190.0, 258.0),
+            # > Vignette photo 4. Format : Rectangle.
+            # > Valeur de départ DE : (72.0, 168.0, 190.0, 258.0)
+
+            "photo_album_photo_5_rectangle": (200.0, 168.0, 318.0, 258.0),
+            # > Vignette photo 5. Format : Rectangle.
+            # > Valeur de départ DE : (200.0, 168.0, 318.0, 258.0)
+
+            "photo_album_photo_6_rectangle": (328.0, 168.0, 446.0, 258.0),
+            # > Vignette photo 6. Format : Rectangle.
+            # > Valeur de départ DE : (328.0, 168.0, 446.0, 258.0)
+
+
+            # =====================
+            # PHOTO > GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU PHOTO > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "photo_menu_aide_haut_bas_rectangle": (-20.0, 154.0, 128.0, 184.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ DE : (-20.0, 154.0, 128.0, 184.0)
+
+            "photo_menu_aide_retour_rectangle": (129.0, 154.0, 256.0, 184.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (129.0, 154.0, 256.0, 184.0)
+
+            "photo_menu_aide_selection_rectangle": (257.0, 154.0, 404.0, 184.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (257.0, 154.0, 404.0, 184.0)
+
+            "photo_album_aide_navigation_rectangle": (32.0, 330.0, 190.0, 360.0),
+            # > Aide navigation. Format : Rectangle.
+            # > Valeur de départ DE : (32.0, 330.0, 190.0, 360.0)
+
+            "photo_album_aide_zoom_rectangle": (201.0, 330.0, 318.0, 360.0),
+            # > Aide zoom. Format : Rectangle.
+            # > Valeur de départ DE : (201.0, 330.0, 318.0, 360.0)
+
+            "photo_album_aide_retour_rectangle": (318.0, 330.0, 447.0, 360.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (318.0, 330.0, 447.0, 360.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU EXTRA > GLOBAL
+            # =====================
+
+            "extra_ecran_rectangle": (64.0, 128.0, 576.0, 352.0),
+            # > Zone complète EXTRA. Format : Rectangle.
+            # > Valeur de départ DE : (64.0, 128.0, 576.0, 352.0)
+
+            "extra_liste_rectangle": (32.0, 32.0, 480.0, 195.0),
+            # > Zone liste EXTRA. Format : Rectangle.
+            # > Valeur de départ DE : (32.0, 32.0, 480.0, 195.0)
+
+            "extra_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille Concept Art/Personnage/Bonus/Crédits. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # EXTRA > COMCEPT ART
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > PERSONNAGE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > OPTION BONUS
+            # =====================
+
+            "bonus_ecran_rectangle": (110.0, 72.0, 530.0, 253.0),
+            # > Zone écran options bonus. Format : Rectangle.
+            # > Valeur de départ DE : (110.0, 72.0, 530.0, 253.0)
+
+            "bonus_liste_rectangle": (30.0, 60.0, 190.0, 141.0),
+            # > Zone liste options bonus. Format : Rectangle.
+            # > Valeur de départ DE : (30.0, 60.0, 190.0, 141.0)
+
+            "bonus_item_rectangle": (0.0, 0.0, 160.0, 40.0),
+            # > Taille d’une option bonus. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 0.0, 160.0, 40.0)
+
+            "bonus_aide_gauche_droite_rectangle": (0.0, 191.0, 140.0, 221.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 191.0, 140.0, 221.0)
+
+            "bonus_aide_retour_rectangle": (141.0, 191.0, 280.0, 221.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (141.0, 191.0, 280.0, 221.0)
+
+            "bonus_aide_selection_rectangle": (281.0, 191.0, 420.0, 221.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (281.0, 191.0, 420.0, 221.0)
+
+
+            # =====================
+            # EXTRA > OREDIT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU EXTRA > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "extra_aide_haut_bas_rectangle": (0.0, 236.0, 170.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 236.0, 170.0, 264.0)
+
+            "extra_aide_retour_rectangle": (171.0, 236.0, 340.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ DE : (171.0, 236.0, 340.0, 264.0)
+
+            "extra_aide_selection_rectangle": (341.0, 236.0, 512.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ DE : (341.0, 236.0, 512.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU SAUVEGARDE / CHARGEMENT > GLOBAL
+            # =====================
+
+            "sauvegarde_ecran_rectangle": (64.0, 79.0, 576.0, 401.0),
+            # > Zone écran sauvegarde/chargement. Format : Rectangle.
+            # > Valeur de départ DE : (64.0, 79.0, 576.0, 401.0)
+
+            "sauvegarde_liste_rectangle": (55.0, 113.0, 457.0, 281.0),
+            # > Zone liste sauvegardes. Format : Rectangle.
+            # > Valeur de départ DE : (55.0, 113.0, 457.0, 281.0)
+
+            "sauvegarde_fleche_gauche_rectangle": (23.0, 30.0, 55.0, 62.0),
+            # > Flèche page gauche. Format : Rectangle.
+            # > Valeur de départ DE : (23.0, 30.0, 55.0, 62.0)
+
+            "sauvegarde_fleche_droite_rectangle": (457.0, 30.0, 489.0, 62.0),
+            # > Flèche page droite. Format : Rectangle.
+            # > Valeur de départ DE : (457.0, 30.0, 489.0, 62.0)
+
+            "sauvegarde_fleche_haut_rectangle": (31.0, 121.0, 46.0, 137.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ DE : (31.0, 121.0, 46.0, 137.0)
+
+            "sauvegarde_fleche_bas_rectangle": (31.0, 257.0, 46.0, 273.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ DE : (31.0, 257.0, 46.0, 273.0)
+
+            "sauvegarde_info_rectangle": (-42.0, 50.0, 554.0, 70.0),
+            # > Zone texte information. Format : Rectangle.
+            # > Valeur de départ DE : (-42.0, 50.0, 554.0, 70.0)
+
+            "sauvegarde_espace_libre_rectangle": (50.0, 281.0, 346.0, 309.0),
+            # > Zone texte espace libre. Format : Rectangle.
+            # > Valeur de départ DE : (50.0, 281.0, 346.0, 309.0)
+
+            "sauvegarde_bouton_sauver_rectangle": (0.0, 332.0, 170.0, 362.0),
+            # > Bouton SAUVER/CHARGER gauche. Format : Rectangle.
+            # > Valeur de départ DE : (0.0, 332.0, 170.0, 362.0)
+
+            "sauvegarde_bouton_supprimer_rectangle": (171.0, 332.0, 384.0, 362.0),
+            # > Bouton SUPPRIMER. Format : Rectangle.
+            # > Valeur de départ DE : (171.0, 332.0, 384.0, 362.0)
+
+            "sauvegarde_bouton_annuler_rectangle": (385.0, 332.0, 512.0, 362.0),
+            # > Bouton ANNULER. Format : Rectangle.
+            # > Valeur de départ DE : (385.0, 332.0, 512.0, 362.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL HAUTEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL LARGEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ACTIVE
+            # =====================
+
+            "gdef_s_x": 0.53,  # Aides/boutons sélectionnés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL INACTIVE
+            # =====================
+
+            "gdef_gy_x": 0.46,  # Aides/boutons grisés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL SIZE
+            # =====================
+
+            "gdef_w_x": 0.46,  # Aides/boutons blancs. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ESPACEMENT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ICON
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # TAILLES TEXTE GLOBALES
+            # =====================
+
+            # Grands titres normaux. Format : décimal, exemple 0.40.
+            "title_x": 0.2,
+
+            "title_gr_x": 0.2,  # Grands titres grisés. Format : décimal.
+
+            "title_s_x": 0.3,  # Grands titres sélectionnés. Format : décimal.
+
+            "stitle_x": 0.2,  # Titres de menu normaux. Format : décimal.
+
+            # Titres de menu sélectionnés. Format : décimal.
+            "stitle_s_x": 0.2,
+
+            "stitle_g_x": 0.2,  # Titres de menu grisés. Format : décimal.
+
+            "stitlesm_x": 0.15,  # Petits sous-titres. Format : décimal.
+
+            # Textes quêtes/onglets normaux. Format : décimal.
+            "ititle_x": 0.12,
+
+            # Textes quêtes/onglets sélectionnés. Format : décimal.
+            "ititle_s_x": 0.12,
+
+            # Textes quêtes/onglets grisés. Format : décimal.
+            "ititle_g_x": 0.12,
+
+            # Descriptions/statistiques blanches. Format : décimal.
             "desc_wht_x": 0.34,
-            "desc_gry_x": 0.34,             # Même texte lorsqu'il est grisé.
-            "description_x1": 280.0,        # Descriptions Livre noir.
+
+            # Descriptions/statistiques grisées. Format : décimal.
+            "desc_gry_x": 0.34,
+
         },
         "es": {
-            "edition": "SLES_526.44",       # Edition PS2 espagnole source.
-            "largeur_menu": 300.0,          # Boutons élargis à 300 pixels.
-            "pause": (10.0, 310.0),         # Menu Pause élargi.
-            "principal": (161.0, 461.0),    # Menu principal élargi.
-            # Titre supérieur droit du Livre noir.
-            "title_x": 0.20,
-            "title_gr_x": 0.20,             # Même titre lorsqu'il est grisé.
-            # Même titre lorsqu'il est sélectionné.
-            "title_s_x": 0.30,
-            "stitle_x": 0.22,               # Choix principaux espagnols.
-            "stitle_s_x": 0.22,             # Choix sélectionnés.
-            "stitle_g_x": 0.22,             # Choix désactivés.
-            "stitlesm_x": 0.16,             # Petits sous-titres compacts.
-            "ititle_x": 0.12,               # Statistiques/objectifs/onglets.
-            "ititle_s_x": 0.12,             # Petits textes sélectionnés.
-            "ititle_g_x": 0.12,             # Petits textes désactivés.
-            "gdef_w_x": 0.48,               # Légendes espagnoles des touches.
-            "gdef_s_x": 0.55,               # Bouton sélectionné en orange.
-            "gdef_gy_x": 0.48,              # Bouton grisé/désactivé.
-            "desc_wht_x": 0.38,             # Porcentaje/Valoración/Tiempo.
-            "desc_gry_x": 0.38,             # Même texte lorsqu'il est grisé.
-            "description_x1": 280.0,        # Descriptions Livre noir.
+
+            # =====================
+            # LANGUE
+            # =====================
+
+            "edition": "SLES_526.44",  # Edition PS2 source pour ce profil.
+
+
+            # =====================
+            # MENU PRINCIPAL  GLOBAL
+            # =====================
+
+            "menu_principal_rectangle": (161.0, 250.0, 461.0, 355.0),
+            # > Zone complète du menu principal. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (161.0, 250.0, 461.0, 355.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > NOUVELLE PARTIE
+            # =====================
+
+            "menu_principal_nouvelle_partie_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton NOUVELLE PARTIE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+            "menu_principal_texte_demarrer_rectangle": (84.0, 285.0, 576.0, 320.0),
+            # > Zone du texte/indication de démarrage. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (84.0, 285.0, 576.0, 320.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > CHARGER
+            # =====================
+
+            "menu_principal_charger_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton CHARGER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > QUITTER
+            # =====================
+
+            "menu_principal_quitter_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PAUSE > GLOBAL
+            # =====================
+
+            "menu_pause_ecran_rectangle": (160.0, 101.0, 480.0, 379.0),
+            # > Zone écran du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (160.0, 101.0, 480.0, 379.0)
+
+            "menu_pause_liste_rectangle": (10.0, 32.0, 310.0, 243.0),
+            # > Zone contenant les 6 choix du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (10.0, 32.0, 310.0, 243.0)
+
+
+            # =====================
+            # MENU PAUSE > LIVRE NOIR
+            # =====================
+
+            "menu_pause_bouton_1_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton LIVRE NOIR. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > SAUVEGARDE
+            # =====================
+
+            "menu_pause_bouton_2_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton SAUVEGARDE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > OPTION
+            # =====================
+
+            "menu_pause_bouton_3_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton OPTION. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > PHOTO
+            # =====================
+
+            "menu_pause_bouton_4_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton PHOTO. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > EXTRA
+            # =====================
+
+            "menu_pause_bouton_5_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton EXTRA. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > QUITTER
+            # =====================
+
+            "menu_pause_bouton_6_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "menu_pause_aide_haut_bas_rectangle": (-80.0, 288.0, 86.0, 318.0),
+            # > Zone aide HAUT/BAS. Format : Rectangle.
+            # > Valeur de départ ES : (-80.0, 288.0, 86.0, 318.0)
+
+            "menu_pause_aide_retour_rectangle": (87.0, 288.0, 233.0, 318.0),
+            # > Zone aide RETOUR. Format : Rectangle.
+            # > Valeur de départ ES : (87.0, 288.0, 233.0, 318.0)
+
+            "menu_pause_aide_selection_rectangle": (234.0, 288.0, 400.0, 318.0),
+            # > Zone aide SÉLECTION. Format : Rectangle.
+            # > Valeur de départ ES : (234.0, 288.0, 400.0, 318.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU LIVRE NOIR > GLOBAL
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR GLOBAL FOND RECTANGLE BLEU
+            # =====================
+
+            "livre_noir_fond_rectangle": (64.0, 63.0, 576.0, 407.0),
+            # > Fond/zone principale bleue du Livre noir. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ ES : (64.0, 63.0, 576.0, 407.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS >
+            # =====================
+
+            "livre_noir_item_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une entrée générique des listes Livre noir ; hauteur = pas vertical de base. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 234.0, 28.0)
+
+            "livre_noir_item_icone_rectangle": (0.0, 4.0, 20.0, 24.0),
+            # > Zone de l’icône interne d’une entrée de liste. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 4.0, 20.0, 24.0)
+
+            "livre_noir_item_texte_marge_rectangle": (25.0, 0.0, 25.0, 0.0),
+            # > Marge/zone interne du texte d’une entrée ; 25.0 réserve la place de l’icône. Format : Rectangle.
+            # > Valeur de départ ES : (25.0, 0.0, 25.0, 0.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON ACTIVE HAUT GAUCHE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON INACTIVE HAUT GAUCHE
+            # =====================
+
+            "onglet_quete_inactif_rectangle": (55.0, -29.0, 83.0, 2.0),
+            # > Icône onglet AND NOW inactif. Format : Rectangle.
+            # > Valeur de départ ES : (55.0, -29.0, 83.0, 2.0)
+
+            "onglet_filles_inactif_rectangle": (87.0, -29.0, 115.0, 2.0),
+            # > Icône onglet FILLES inactif. Format : Rectangle.
+            # > Valeur de départ ES : (87.0, -29.0, 115.0, 2.0)
+
+            "onglet_tenue_inactif_rectangle": (118.0, -29.0, 146.0, 2.0),
+            # > Icône onglet TENUE inactif. Format : Rectangle.
+            # > Valeur de départ ES : (118.0, -29.0, 146.0, 2.0)
+
+            "onglet_objet_inactif_rectangle": (148.0, -29.0, 176.0, 2.0),
+            # > Icône onglet OBJET inactif. Format : Rectangle.
+            # > Valeur de départ ES : (148.0, -29.0, 176.0, 2.0)
+
+            "onglet_stats_inactif_rectangle": (180.0, -29.0, 208.0, 2.0),
+            # > Icône onglet STATISTIQUES inactif. Format : Rectangle.
+            # > Valeur de départ ES : (180.0, -29.0, 208.0, 2.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > GLOBAL
+            # =====================
+
+            "quete_onglet_actif_rectangle": (38.0, -29.0, 101.0, 2.0),
+            # > Surbrillance de l’onglet AND NOW actif. Format : Rectangle.
+            # > Valeur de départ ES : (38.0, -29.0, 101.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE
+            # =====================
+
+            "quete_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE > ICON A DROITE
+            # =====================
+
+            "quete_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > SCROLL BOUTTON QUÊTES GAUCHE
+            # =====================
+
+            "quete_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Bouton/flèche HAUT. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 52.0, 36.0, 72.0)
+
+            "quete_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Bouton/flèche BAS. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP GAUCHE > QUÊTES
+            # =====================
+
+            "quete_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Zone complète de la liste des quêtes. Format : Rectangle.
+            # > Valeur de départ ES : (38.0, 32.0, 272.0, 286.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > SOUS-TITRE DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_sous_titre_rectangle": (280.0, 25.0, 460.0, 65.0),
+            # > Zone du sous-titre visible au-dessus de la description. Format : Rectangle.
+            # > Valeur de départ ES : (280.0, 25.0, 460.0, 65.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_description_rectangle": (280.0, 75.0, 482.0, 350.0),
+            # > Zone du texte de description à droite. Format : Rectangle.
+            # > Valeur de départ ES : (280.0, 75.0, 482.0, 350.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "quete_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide PAGE gauche. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 353.0, 170.0, 385.0)
+
+            "quete_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide HAUT/BAS centre. Format : Rectangle.
+            # > Valeur de départ ES : (171.0, 353.0, 340.0, 385.0)
+
+            "quete_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide RETOUR droite. Format : Rectangle.
+            # > Valeur de départ ES : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > GLOBAL
+            # =====================
+
+            "fille_onglet_actif_rectangle": (70.0, -29.0, 133.0, 2.0),
+            # > Surbrillance onglet FILLES actif. Format : Rectangle.
+            # > Valeur de départ ES : (70.0, -29.0, 133.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE  "FILLES"
+            # =====================
+
+            "fille_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE > ICON A DROITE "FILLES"
+            # =====================
+
+            "fille_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP GAUCHE > lISTE FILLE
+            # =====================
+
+            "fille_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des filles à gauche. Format : Rectangle.
+            # > Valeur de départ ES : (38.0, 32.0, 272.0, 286.0)
+
+            "fille_image_principale_rectangle": (311.0, 22.0, 439.0, 150.0),
+            # > Grande image/portrait à droite. Format : Rectangle.
+            # > Valeur de départ ES : (311.0, 22.0, 439.0, 150.0)
+
+            "fille_icone_rectangle": (343.0, 210.0, 407.0, 274.0),
+            # > Icône/image secondaire à droite. Format : Rectangle.
+            # > Valeur de départ ES : (343.0, 210.0, 407.0, 274.0)
+
+            "fille_token_texte_rectangle": (311.0, 285.0, 439.0, 315.0),
+            # > Zone texte/token en bas à droite. Format : Rectangle.
+            # > Valeur de départ ES : (311.0, 285.0, 439.0, 315.0)
+
+            "fille_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche HAUT. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 52.0, 36.0, 72.0)
+
+            "fille_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche BAS. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP DROITE > HISTORIQUE
+            # =====================
+
+            "fille_texte_milieu_rectangle": (311.0, 175.0, 439.0, 205.0),
+            # > Zone texte centrale à droite. Format : Rectangle.
+            # > Valeur de départ ES : (311.0, 175.0, 439.0, 205.0)
+
+            "fille_historique_fond_rectangle": (48.0, 36.0, 592.0, 377.0),
+            # > Zone écran historique fille. Format : Rectangle.
+            # > Valeur de départ ES : (48.0, 36.0, 592.0, 377.0)
+
+            "fille_historique_titre_rectangle": (335.0, 90.0, 463.0, 110.0),
+            # > Titre/nom dans historique. Format : Rectangle.
+            # > Valeur de départ ES : (335.0, 90.0, 463.0, 110.0)
+
+            "fille_historique_image_rectangle": (335.0, 120.0, 463.0, 248.0),
+            # > Image historique. Format : Rectangle.
+            # > Valeur de départ ES : (335.0, 120.0, 463.0, 248.0)
+
+            "fille_historique_liste_titre_rectangle": (38.0, 30.0, 272.0, 55.0),
+            # > Titre liste historique. Format : Rectangle.
+            # > Valeur de départ ES : (38.0, 30.0, 272.0, 55.0)
+
+            "fille_historique_liste_rectangle": (38.0, 70.0, 272.0, 295.0),
+            # > Liste historique. Format : Rectangle.
+            # > Valeur de départ ES : (38.0, 70.0, 272.0, 295.0)
+
+            "fille_historique_scroll_haut_rectangle": (16.0, 90.0, 36.0, 110.0),
+            # > Flèche haut historique. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 90.0, 36.0, 110.0)
+
+            "fille_historique_scroll_bas_rectangle": (16.0, 260.0, 36.0, 280.0),
+            # > Flèche bas historique. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 260.0, 36.0, 280.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "fille_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 353.0, 123.0, 385.0)
+
+            "fille_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ ES : (124.0, 353.0, 251.0, 385.0)
+
+            "fille_aide_selection_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (252.0, 353.0, 390.0, 385.0)
+
+            "fille_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > GLOBAL
+            # =====================
+
+            "tenue_onglet_actif_rectangle": (101.0, -29.0, 164.0, 2.0),
+            # > Surbrillance onglet TENUE actif. Format : Rectangle.
+            # > Valeur de départ ES : (101.0, -29.0, 164.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE  "TENU"
+            # =====================
+
+            "tenue_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE > ICON A DROITE "TENU"
+            # =====================
+
+            "tenue_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP GAUCHE > LISTE TENU
+            # =====================
+
+            "tenue_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des tenues à gauche. Format : Rectangle.
+            # > Valeur de départ ES : (38.0, 32.0, 272.0, 286.0)
+
+            "tenue_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 52.0, 36.0, 72.0)
+
+            "tenue_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP DROITE > AFFICHE TENU
+            # =====================
+
+            "tenue_sous_titre_rectangle": (291.0, 247.0, 495.0, 262.0),
+            # > Sous-titre ACCESSOIRES affiché dans le corps droit.
+
+            "tenue_accessoire_1_rectangle": (291.0, 262.0, 336.0, 314.0),
+            # > Emplacement accessoire 1. Format : Rectangle.
+            # > Valeur de départ ES : (291.0, 262.0, 336.0, 314.0)
+
+            "tenue_accessoire_2_rectangle": (344.0, 262.0, 389.0, 314.0),
+            # > Emplacement accessoire 2. Format : Rectangle.
+            # > Valeur de départ ES : (344.0, 262.0, 389.0, 314.0)
+
+            "tenue_accessoire_3_rectangle": (397.0, 262.0, 442.0, 314.0),
+            # > Emplacement accessoire 3. Format : Rectangle.
+            # > Valeur de départ ES : (397.0, 262.0, 442.0, 314.0)
+
+            "tenue_accessoire_4_rectangle": (450.0, 262.0, 495.0, 314.0),
+            # > Emplacement accessoire 4. Format : Rectangle.
+            # > Valeur de départ ES : (450.0, 262.0, 495.0, 314.0)
+
+
+            # =====================
+            # LIVRE NOIR > OONGLET TENU > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > GLOBAL
+            # =====================
+
+            "objet_onglet_actif_rectangle": (131.0, -29.0, 194.0, 2.0),
+            # > Surbrillance onglet OBJET actif. Format : Rectangle.
+            # > Valeur de départ ES : (131.0, -29.0, 194.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE  "OBJETS"
+            # =====================
+
+            "objet_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE  "OBJETS" > RIGHT ICON
+            # =====================
+
+            "objet_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP GAUCHE > LIST OBJET
+            # =====================
+
+            "objet_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des objets à gauche. Format : Rectangle.
+            # > Valeur de départ ES : (38.0, 32.0, 272.0, 286.0)
+
+            "objet_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 52.0, 36.0, 72.0)
+
+            "objet_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP DROITE > DESCRIPTION OBJET
+            # =====================
+
+            "objet_image_rectangle": (343.0, 54.0, 407.0, 118.0),
+            # > Image de l’objet sélectionné. Format : Rectangle.
+            # > Valeur de départ ES : (343.0, 54.0, 407.0, 118.0)
+
+            "objet_description_rectangle": (280.0, 130.0, 460.0, 400.0),
+            # > Description de l’objet à droite. Format : Rectangle.
+            # > Valeur de départ ES : (280.0, 130.0, 460.0, 400.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "objet_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 353.0, 123.0, 385.0)
+
+            "objet_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ ES : (124.0, 353.0, 251.0, 385.0)
+
+            "objet_aide_detail_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide détails. Format : Rectangle.
+            # > Valeur de départ ES : (252.0, 353.0, 390.0, 385.0)
+
+            "objet_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > GLOBAL
+            # =====================
+
+            "stats_onglet_actif_rectangle": (163.0, -29.0, 226.0, 2.0),
+            # > Surbrillance onglet STATISTIQUES actif. Format : Rectangle.
+            # > Valeur de départ ES : (163.0, -29.0, 226.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE  "STATISTIQUES"
+            # =====================
+
+            "stats_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE  "STATISTIQUES" > RIGHT ICON
+            # =====================
+
+            "stats_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP GAUCHE > LIST STAT TYPE
+            # =====================
+
+            "stats_liste_gauche_rectangle": (38.0, 32.0, 272.0, 285.0),
+            # > Liste catégories statistiques à gauche. Format : Rectangle.
+            # > Valeur de départ ES : (38.0, 32.0, 272.0, 285.0)
+
+            "stats_item_gauche_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une catégorie statistiques gauche. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 234.0, 28.0)
+
+            "stats_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 52.0, 36.0, 72.0)
+
+            "stats_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ ES : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP DROITE > DETAIL STAT TYPE
+            # =====================
+
+            "stats_liste_droite_rectangle": (270.0, 32.0, 490.0, 286.0),
+            # > Zone valeurs statistiques à droite. Format : Rectangle.
+            # > Valeur de départ ES : (270.0, 32.0, 490.0, 286.0)
+
+            "stats_item_droite_rectangle": (0.0, 0.0, 220.0, 24.0),
+            # > Taille d’une ligne statistique droite. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 220.0, 24.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "stats_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide page. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 353.0, 170.0, 385.0)
+
+            "stats_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ ES : (171.0, 353.0, 340.0, 385.0)
+
+            "stats_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU OPTION > GLOBAL
+            # =====================
+
+            "option_ecran_rectangle": (128.0, 92.0, 512.0, 316.0),
+            # > Zone écran OPTIONS. Format : Rectangle.
+            # > Valeur de départ ES : (128.0, 92.0, 512.0, 316.0)
+
+            "option_liste_rectangle": (-32.0, 32.0, 416.0, 206.0),
+            # > Zone de la liste OPTIONS. Format : Rectangle.
+            # > Valeur de départ ES : (-32.0, 32.0, 416.0, 206.0)
+
+            "option_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Audio/Rumble/Difficulté/Contrôleur. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # OPTION > AUDIO
+            # =====================
+
+            "audio_ecran_rectangle": (130.0, 92.0, 510.0, 313.0),
+            # > Zone écran AUDIO. Format : Rectangle.
+            # > Valeur de départ ES : (130.0, 92.0, 510.0, 313.0)
+
+            "audio_liste_rectangle": (30.0, 50.0, 150.0, 171.0),
+            # > Liste des 3 réglages audio. Format : Rectangle.
+            # > Valeur de départ ES : (30.0, 50.0, 150.0, 171.0)
+
+            "audio_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille d’une ligne audio. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 120.0, 40.0)
+
+            "audio_fleche_gauche_1_rectangle": (165.0, 63.0, 181.0, 79.0),
+            # > Flèche gauche ligne 1. Format : Rectangle.
+            # > Valeur de départ ES : (165.0, 63.0, 181.0, 79.0)
+
+            "audio_fleche_gauche_2_rectangle": (165.0, 103.0, 181.0, 119.0),
+            # > Flèche gauche ligne 2. Format : Rectangle.
+            # > Valeur de départ ES : (165.0, 103.0, 181.0, 119.0)
+
+            "audio_fleche_gauche_3_rectangle": (165.0, 143.0, 181.0, 159.0),
+            # > Flèche gauche ligne 3. Format : Rectangle.
+            # > Valeur de départ ES : (165.0, 143.0, 181.0, 159.0)
+
+            "audio_fleche_droite_1_rectangle": (329.0, 63.0, 345.0, 79.0),
+            # > Flèche droite ligne 1. Format : Rectangle.
+            # > Valeur de départ ES : (329.0, 63.0, 345.0, 79.0)
+
+            "audio_fleche_droite_2_rectangle": (329.0, 103.0, 345.0, 119.0),
+            # > Flèche droite ligne 2. Format : Rectangle.
+            # > Valeur de départ ES : (329.0, 103.0, 345.0, 119.0)
+
+            "audio_fleche_droite_3_rectangle": (329.0, 143.0, 345.0, 159.0),
+            # > Flèche droite ligne 3. Format : Rectangle.
+            # > Valeur de départ ES : (329.0, 143.0, 345.0, 159.0)
+
+            "audio_aide_gauche_droite_rectangle": (-86.0, 231.0, 190.0, 261.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ ES : (-86.0, 231.0, 190.0, 261.0)
+
+            "audio_aide_retour_rectangle": (191.0, 231.0, 319.0, 261.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (191.0, 231.0, 319.0, 261.0)
+
+            "audio_aide_selection_rectangle": (320.0, 231.0, 468.0, 261.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (320.0, 231.0, 468.0, 261.0)
+
+
+            # =====================
+            # OPTION > DIFICULTE
+            # =====================
+
+            "difficulte_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ ES : (130.0, 92.0, 510.0, 233.0)
+
+            "difficulte_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ ES : (30.0, 60.0, 150.0, 101.0)
+
+            "difficulte_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 120.0, 40.0)
+
+            "difficulte_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ ES : (165.0, 73.0, 181.0, 89.0)
+
+            "difficulte_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ ES : (329.0, 73.0, 345.0, 89.0)
+
+            "difficulte_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ ES : (-30.0, 151.0, 116.0, 181.0)
+
+            "difficulte_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (117.0, 151.0, 264.0, 181.0)
+
+            "difficulte_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # OPTION CONTROLLER
+            # =====================
+
+            "controleur_ecran_rectangle": (48.0, 132.0, 592.0, 328.0),
+            # > Zone écran contrôleur. Format : Rectangle.
+            # > Valeur de départ ES : (48.0, 132.0, 592.0, 328.0)
+
+            "controleur_liste_rectangle": (105.0, 70.0, 245.0, 154.0),
+            # > Liste options contrôleur. Format : Rectangle.
+            # > Valeur de départ ES : (105.0, 70.0, 245.0, 154.0)
+
+            "controleur_item_rectangle": (0.0, 0.0, 140.0, 28.0),
+            # > Taille d’une ligne contrôleur. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 140.0, 28.0)
+
+            "controleur_aide_haut_bas_rectangle": (0.0, 206.0, 136.0, 236.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 206.0, 136.0, 236.0)
+
+            "controleur_aide_cycle_rectangle": (137.0, 206.0, 273.0, 236.0),
+            # > Aide cycle. Format : Rectangle.
+            # > Valeur de départ ES : (137.0, 206.0, 273.0, 236.0)
+
+            "controleur_aide_retour_rectangle": (274.0, 206.0, 409.0, 236.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (274.0, 206.0, 409.0, 236.0)
+
+            "controleur_aide_selection_rectangle": (410.0, 206.0, 545.0, 236.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (410.0, 206.0, 545.0, 236.0)
+
+
+            # =====================
+            # OPTION CONTROLLER > VIBRATION
+            # =====================
+
+            "vibration_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran VIBRATION. Format : Rectangle.
+            # > Valeur de départ ES : (130.0, 92.0, 510.0, 233.0)
+
+            "vibration_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste VIBRATION. Format : Rectangle.
+            # > Valeur de départ ES : (30.0, 60.0, 150.0, 101.0)
+
+            "vibration_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne VIBRATION. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 120.0, 40.0)
+
+            "vibration_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ ES : (165.0, 73.0, 181.0, 89.0)
+
+            "vibration_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ ES : (329.0, 73.0, 345.0, 89.0)
+
+            "vibration_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ ES : (-30.0, 151.0, 116.0, 181.0)
+
+            "vibration_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (117.0, 151.0, 264.0, 181.0)
+
+            "vibration_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # MENU OPTION > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "option_aide_haut_bas_rectangle": (-30.0, 234.0, 118.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ ES : (-30.0, 234.0, 118.0, 264.0)
+
+            "option_aide_retour_rectangle": (119.0, 234.0, 266.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (119.0, 234.0, 266.0, 264.0)
+
+            "option_aide_selection_rectangle": (267.0, 234.0, 414.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (267.0, 234.0, 414.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PHOTO > GLOBAL
+            # =====================
+
+            "photo_menu_ecran_rectangle": (128.0, 128.0, 512.0, 272.0),
+            # > Zone écran choix PHOTO. Format : Rectangle.
+            # > Valeur de départ ES : (128.0, 128.0, 512.0, 272.0)
+
+            "photo_menu_liste_rectangle": (-32.0, 32.0, 416.0, 128.0),
+            # > Zone liste Album/Galerie. Format : Rectangle.
+            # > Valeur de départ ES : (-32.0, 32.0, 416.0, 128.0)
+
+            "photo_menu_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Album/Galerie. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # PHOTO > CHOIX MENU PHOTO GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # PHOTO > ALBUM
+            # =====================
+
+            "photo_album_ecran_rectangle": (64.0, 64.0, 576.0, 384.0),
+            # > Zone complète album photo. Format : Rectangle.
+            # > Valeur de départ ES : (64.0, 64.0, 576.0, 384.0)
+
+            "photo_album_titre_rectangle": (52.0, 43.0, 466.0, 73.0),
+            # > Zone titre album. Format : Rectangle.
+            # > Valeur de départ ES : (52.0, 43.0, 466.0, 73.0)
+
+            "photo_album_scroll_gauche_rectangle": (22.0, 30.0, 38.0, 46.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ ES : (22.0, 30.0, 38.0, 46.0)
+
+            "photo_album_scroll_droite_rectangle": (475.0, 30.0, 491.0, 46.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ ES : (475.0, 30.0, 491.0, 46.0)
+
+            "photo_album_scroll_haut_rectangle": (30.0, 78.0, 46.0, 94.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ ES : (30.0, 78.0, 46.0, 94.0)
+
+            "photo_album_scroll_bas_rectangle": (30.0, 232.0, 46.0, 248.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ ES : (30.0, 232.0, 46.0, 248.0)
+
+            "photo_album_photo_1_rectangle": (72.0, 68.0, 190.0, 158.0),
+            # > Vignette photo 1. Format : Rectangle.
+            # > Valeur de départ ES : (72.0, 68.0, 190.0, 158.0)
+
+            "photo_album_photo_2_rectangle": (200.0, 68.0, 318.0, 158.0),
+            # > Vignette photo 2. Format : Rectangle.
+            # > Valeur de départ ES : (200.0, 68.0, 318.0, 158.0)
+
+            "photo_album_photo_3_rectangle": (328.0, 68.0, 446.0, 158.0),
+            # > Vignette photo 3. Format : Rectangle.
+            # > Valeur de départ ES : (328.0, 68.0, 446.0, 158.0)
+
+            "photo_album_photo_4_rectangle": (72.0, 168.0, 190.0, 258.0),
+            # > Vignette photo 4. Format : Rectangle.
+            # > Valeur de départ ES : (72.0, 168.0, 190.0, 258.0)
+
+            "photo_album_photo_5_rectangle": (200.0, 168.0, 318.0, 258.0),
+            # > Vignette photo 5. Format : Rectangle.
+            # > Valeur de départ ES : (200.0, 168.0, 318.0, 258.0)
+
+            "photo_album_photo_6_rectangle": (328.0, 168.0, 446.0, 258.0),
+            # > Vignette photo 6. Format : Rectangle.
+            # > Valeur de départ ES : (328.0, 168.0, 446.0, 258.0)
+
+
+            # =====================
+            # PHOTO > GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU PHOTO > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "photo_menu_aide_haut_bas_rectangle": (-20.0, 154.0, 128.0, 184.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ ES : (-20.0, 154.0, 128.0, 184.0)
+
+            "photo_menu_aide_retour_rectangle": (129.0, 154.0, 256.0, 184.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (129.0, 154.0, 256.0, 184.0)
+
+            "photo_menu_aide_selection_rectangle": (257.0, 154.0, 404.0, 184.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (257.0, 154.0, 404.0, 184.0)
+
+            "photo_album_aide_navigation_rectangle": (32.0, 330.0, 190.0, 360.0),
+            # > Aide navigation. Format : Rectangle.
+            # > Valeur de départ ES : (32.0, 330.0, 190.0, 360.0)
+
+            "photo_album_aide_zoom_rectangle": (201.0, 330.0, 318.0, 360.0),
+            # > Aide zoom. Format : Rectangle.
+            # > Valeur de départ ES : (201.0, 330.0, 318.0, 360.0)
+
+            "photo_album_aide_retour_rectangle": (318.0, 330.0, 447.0, 360.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (318.0, 330.0, 447.0, 360.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU EXTRA > GLOBAL
+            # =====================
+
+            "extra_ecran_rectangle": (64.0, 128.0, 576.0, 352.0),
+            # > Zone complète EXTRA. Format : Rectangle.
+            # > Valeur de départ ES : (64.0, 128.0, 576.0, 352.0)
+
+            "extra_liste_rectangle": (32.0, 32.0, 480.0, 195.0),
+            # > Zone liste EXTRA. Format : Rectangle.
+            # > Valeur de départ ES : (32.0, 32.0, 480.0, 195.0)
+
+            "extra_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille Concept Art/Personnage/Bonus/Crédits. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # EXTRA > COMCEPT ART
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > PERSONNAGE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > OPTION BONUS
+            # =====================
+
+            "bonus_ecran_rectangle": (110.0, 72.0, 530.0, 253.0),
+            # > Zone écran options bonus. Format : Rectangle.
+            # > Valeur de départ ES : (110.0, 72.0, 530.0, 253.0)
+
+            "bonus_liste_rectangle": (30.0, 60.0, 190.0, 141.0),
+            # > Zone liste options bonus. Format : Rectangle.
+            # > Valeur de départ ES : (30.0, 60.0, 190.0, 141.0)
+
+            "bonus_item_rectangle": (0.0, 0.0, 160.0, 40.0),
+            # > Taille d’une option bonus. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 0.0, 160.0, 40.0)
+
+            "bonus_aide_gauche_droite_rectangle": (0.0, 191.0, 140.0, 221.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 191.0, 140.0, 221.0)
+
+            "bonus_aide_retour_rectangle": (141.0, 191.0, 280.0, 221.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (141.0, 191.0, 280.0, 221.0)
+
+            "bonus_aide_selection_rectangle": (281.0, 191.0, 420.0, 221.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (281.0, 191.0, 420.0, 221.0)
+
+
+            # =====================
+            # EXTRA > OREDIT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU EXTRA > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "extra_aide_haut_bas_rectangle": (0.0, 236.0, 170.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 236.0, 170.0, 264.0)
+
+            "extra_aide_retour_rectangle": (171.0, 236.0, 340.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ ES : (171.0, 236.0, 340.0, 264.0)
+
+            "extra_aide_selection_rectangle": (341.0, 236.0, 512.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ ES : (341.0, 236.0, 512.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU SAUVEGARDE / CHARGEMENT > GLOBAL
+            # =====================
+
+            "sauvegarde_ecran_rectangle": (64.0, 79.0, 576.0, 401.0),
+            # > Zone écran sauvegarde/chargement. Format : Rectangle.
+            # > Valeur de départ ES : (64.0, 79.0, 576.0, 401.0)
+
+            "sauvegarde_liste_rectangle": (55.0, 113.0, 457.0, 281.0),
+            # > Zone liste sauvegardes. Format : Rectangle.
+            # > Valeur de départ ES : (55.0, 113.0, 457.0, 281.0)
+
+            "sauvegarde_fleche_gauche_rectangle": (23.0, 30.0, 55.0, 62.0),
+            # > Flèche page gauche. Format : Rectangle.
+            # > Valeur de départ ES : (23.0, 30.0, 55.0, 62.0)
+
+            "sauvegarde_fleche_droite_rectangle": (457.0, 30.0, 489.0, 62.0),
+            # > Flèche page droite. Format : Rectangle.
+            # > Valeur de départ ES : (457.0, 30.0, 489.0, 62.0)
+
+            "sauvegarde_fleche_haut_rectangle": (31.0, 121.0, 46.0, 137.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ ES : (31.0, 121.0, 46.0, 137.0)
+
+            "sauvegarde_fleche_bas_rectangle": (31.0, 257.0, 46.0, 273.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ ES : (31.0, 257.0, 46.0, 273.0)
+
+            "sauvegarde_info_rectangle": (-42.0, 50.0, 554.0, 70.0),
+            # > Zone texte information. Format : Rectangle.
+            # > Valeur de départ ES : (-42.0, 50.0, 554.0, 70.0)
+
+            "sauvegarde_espace_libre_rectangle": (50.0, 281.0, 346.0, 309.0),
+            # > Zone texte espace libre. Format : Rectangle.
+            # > Valeur de départ ES : (50.0, 281.0, 346.0, 309.0)
+
+            "sauvegarde_bouton_sauver_rectangle": (0.0, 332.0, 170.0, 362.0),
+            # > Bouton SAUVER/CHARGER gauche. Format : Rectangle.
+            # > Valeur de départ ES : (0.0, 332.0, 170.0, 362.0)
+
+            "sauvegarde_bouton_supprimer_rectangle": (171.0, 332.0, 384.0, 362.0),
+            # > Bouton SUPPRIMER. Format : Rectangle.
+            # > Valeur de départ ES : (171.0, 332.0, 384.0, 362.0)
+
+            "sauvegarde_bouton_annuler_rectangle": (385.0, 332.0, 512.0, 362.0),
+            # > Bouton ANNULER. Format : Rectangle.
+            # > Valeur de départ ES : (385.0, 332.0, 512.0, 362.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL HAUTEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL LARGEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ACTIVE
+            # =====================
+
+            "gdef_s_x": 0.55,  # Aides/boutons sélectionnés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL INACTIVE
+            # =====================
+
+            "gdef_gy_x": 0.48,  # Aides/boutons grisés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL SIZE
+            # =====================
+
+            "gdef_w_x": 0.48,  # Aides/boutons blancs. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ESPACEMENT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ICON
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # TAILLES TEXTE GLOBALES
+            # =====================
+
+            # Grands titres normaux. Format : décimal, exemple 0.40.
+            "title_x": 0.2,
+
+            "title_gr_x": 0.2,  # Grands titres grisés. Format : décimal.
+
+            "title_s_x": 0.3,  # Grands titres sélectionnés. Format : décimal.
+
+            "stitle_x": 0.22,  # Titres de menu normaux. Format : décimal.
+
+            # Titres de menu sélectionnés. Format : décimal.
+            "stitle_s_x": 0.22,
+
+            "stitle_g_x": 0.22,  # Titres de menu grisés. Format : décimal.
+
+            "stitlesm_x": 0.16,  # Petits sous-titres. Format : décimal.
+
+            # Textes quêtes/onglets normaux. Format : décimal.
+            "ititle_x": 0.12,
+
+            # Textes quêtes/onglets sélectionnés. Format : décimal.
+            "ititle_s_x": 0.12,
+
+            # Textes quêtes/onglets grisés. Format : décimal.
+            "ititle_g_x": 0.12,
+
+            # Descriptions/statistiques blanches. Format : décimal.
+            "desc_wht_x": 0.38,
+
+            # Descriptions/statistiques grisées. Format : décimal.
+            "desc_gry_x": 0.38,
+
         },
         "it": {
-            "edition": "SLES_526.45",       # Edition PS2 italienne source.
-            "largeur_menu": 300.0,          # Boutons élargis à 300 pixels.
-            "pause": (10.0, 310.0),         # Menu Pause élargi.
-            "principal": (161.0, 461.0),    # Menu principal élargi.
-            "title_x": 0.20,                # STATISTICHE en haut à droite.
-            "title_gr_x": 0.20,             # Même titre lorsqu'il est grisé.
-            "title_s_x": 0.30,              # Même titre en surbrillance.
-            "stitle_x": 0.22,               # SALVA PARTITA/OPZIONI/FOTO/EXTRA.
-            "stitle_s_x": 0.22,             # Même choix en surbrillance.
-            "stitle_g_x": 0.22,             # Même choix désactivé.
-            "stitlesm_x": 0.16,             # Petits sous-titres compacts.
-            "ititle_x": 0.12,               # Statistiques/objectifs/onglets.
-            "ititle_s_x": 0.12,             # Petits textes sélectionnés.
-            "ititle_g_x": 0.12,             # Petits textes désactivés.
-            "gdef_w_x": 0.48,               # Indietro/Seleziona/Su-Giù/Page.
-            "gdef_s_x": 0.55,               # Bouton sélectionné en orange.
-            "gdef_gy_x": 0.48,              # Bouton grisé/désactivé.
-            "desc_wht_x": 0.36,             # Percentuale/Valutazione/Tempo.
-            "desc_gry_x": 0.36,             # Même texte lorsqu'il est grisé.
-            "description_x1": 280.0,        # Descriptions Livre noir.
-        },
-    }
 
-    # ============================================================
-    # RÉGLAGES MANUELS COMPLETS
-    # ============================================================
-    # Une règle = UN élément précis de l'interface.
-    #
-    # fichier    : "AppInit.JAM", "IntrFram.JAM" ou "Levels/*.JAM"
-    # namespace  : ex. "PausMenu", "Audio", "Options", "PhotoAlb"...
-    # name       : Name exact, ou None si on cible seulement le NameSpace
-    # champ      : "Rectangle", "Position", "Scale", "Style", "Name",
-    #              "NameSpace"
-    # occurrence : 1 = premier champ trouvé dans le bloc ciblé, 2 = deuxième...
-    # valeur     : nouvelle valeur SANS le nom du champ
-    # actif      : True applique ; False garde la règle disponible pour test.
-    #
-    # Exemple de test manuel SANS changer les réglages déjà validés :
-    # {"actif": True, "fichier": "AppInit.JAM", "namespace": "Audio",
-    #  "name": None, "champ": "Rectangle", "occurrence": 2,
-    #  "valeur": "30.0 50.0 150.0 171.0"},
-    #
-    # Pour suivre un texte avec un triangle/bouton, créer deux règles dans le
-    # même NameSpace : une pour le Rectangle/Position du texte et une pour le
-    # Rectangle/Position du triangle. Elles restent indépendantes et réglables.
-    REGLAGES_GEOMETRIE_MANUELS = {
-        "en": [],
-        "fr": [],
-        "de": [],
-        "es": [],
-        "it": [],
+            # =====================
+            # LANGUE
+            # =====================
+
+            "edition": "SLES_526.45",  # Edition PS2 source pour ce profil.
+
+
+            # =====================
+            # MENU PRINCIPAL  GLOBAL
+            # =====================
+
+            "menu_principal_rectangle": (161.0, 250.0, 461.0, 355.0),
+            # > Zone complète du menu principal. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (161.0, 250.0, 461.0, 355.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > NOUVELLE PARTIE
+            # =====================
+
+            "menu_principal_nouvelle_partie_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton NOUVELLE PARTIE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+            "menu_principal_texte_demarrer_rectangle": (84.0, 285.0, 576.0, 320.0),
+            # > Zone du texte/indication de démarrage. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (84.0, 285.0, 576.0, 320.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > CHARGER
+            # =====================
+
+            "menu_principal_charger_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton CHARGER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PRINCIPAL > QUITTER
+            # =====================
+
+            "menu_principal_quitter_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Position/taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PAUSE > GLOBAL
+            # =====================
+
+            "menu_pause_ecran_rectangle": (160.0, 101.0, 480.0, 379.0),
+            # > Zone écran du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (160.0, 101.0, 480.0, 379.0)
+
+            "menu_pause_liste_rectangle": (10.0, 32.0, 310.0, 243.0),
+            # > Zone contenant les 6 choix du menu Pause. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (10.0, 32.0, 310.0, 243.0)
+
+
+            # =====================
+            # MENU PAUSE > LIVRE NOIR
+            # =====================
+
+            "menu_pause_bouton_1_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton LIVRE NOIR. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > SAUVEGARDE
+            # =====================
+
+            "menu_pause_bouton_2_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton SAUVEGARDE. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > OPTION
+            # =====================
+
+            "menu_pause_bouton_3_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton OPTION. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > PHOTO
+            # =====================
+
+            "menu_pause_bouton_4_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton PHOTO. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > EXTRA
+            # =====================
+
+            "menu_pause_bouton_5_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton EXTRA. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > QUITTER
+            # =====================
+
+            "menu_pause_bouton_6_rectangle": (0.0, 0.0, 300.0, 35.0),
+            # > Taille du bouton QUITTER. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (0.0, 0.0, 300.0, 35.0)
+
+
+            # =====================
+            # MENU PAUSE > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "menu_pause_aide_haut_bas_rectangle": (-80.0, 288.0, 86.0, 318.0),
+            # > Zone aide HAUT/BAS. Format : Rectangle.
+            # > Valeur de départ IT : (-80.0, 288.0, 86.0, 318.0)
+
+            "menu_pause_aide_retour_rectangle": (87.0, 288.0, 233.0, 318.0),
+            # > Zone aide RETOUR. Format : Rectangle.
+            # > Valeur de départ IT : (87.0, 288.0, 233.0, 318.0)
+
+            "menu_pause_aide_selection_rectangle": (234.0, 288.0, 400.0, 318.0),
+            # > Zone aide SÉLECTION. Format : Rectangle.
+            # > Valeur de départ IT : (234.0, 288.0, 400.0, 318.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU LIVRE NOIR > GLOBAL
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR GLOBAL FOND RECTANGLE BLEU
+            # =====================
+
+            "livre_noir_fond_rectangle": (64.0, 63.0, 576.0, 407.0),
+            # > Fond/zone principale bleue du Livre noir. Format : (X1,Y1,X2,Y2).
+            # > Valeur de départ IT : (64.0, 63.0, 576.0, 407.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS >
+            # =====================
+
+            "livre_noir_item_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une entrée générique des listes Livre noir ; hauteur = pas vertical de base. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 234.0, 28.0)
+
+            "livre_noir_item_icone_rectangle": (0.0, 4.0, 20.0, 24.0),
+            # > Zone de l’icône interne d’une entrée de liste. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 4.0, 20.0, 24.0)
+
+            "livre_noir_item_texte_marge_rectangle": (25.0, 0.0, 25.0, 0.0),
+            # > Marge/zone interne du texte d’une entrée ; 25.0 réserve la place de l’icône. Format : Rectangle.
+            # > Valeur de départ IT : (25.0, 0.0, 25.0, 0.0)
+
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON ACTIVE HAUT GAUCHE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # LIVRE NOIR > GLOBAL > CORP HAUT > GAUCHE > ONGLETS > ICON INACTIVE HAUT GAUCHE
+            # =====================
+
+            "onglet_quete_inactif_rectangle": (55.0, -29.0, 83.0, 2.0),
+            # > Icône onglet AND NOW inactif. Format : Rectangle.
+            # > Valeur de départ IT : (55.0, -29.0, 83.0, 2.0)
+
+            "onglet_filles_inactif_rectangle": (87.0, -29.0, 115.0, 2.0),
+            # > Icône onglet FILLES inactif. Format : Rectangle.
+            # > Valeur de départ IT : (87.0, -29.0, 115.0, 2.0)
+
+            "onglet_tenue_inactif_rectangle": (118.0, -29.0, 146.0, 2.0),
+            # > Icône onglet TENUE inactif. Format : Rectangle.
+            # > Valeur de départ IT : (118.0, -29.0, 146.0, 2.0)
+
+            "onglet_objet_inactif_rectangle": (148.0, -29.0, 176.0, 2.0),
+            # > Icône onglet OBJET inactif. Format : Rectangle.
+            # > Valeur de départ IT : (148.0, -29.0, 176.0, 2.0)
+
+            "onglet_stats_inactif_rectangle": (180.0, -29.0, 208.0, 2.0),
+            # > Icône onglet STATISTIQUES inactif. Format : Rectangle.
+            # > Valeur de départ IT : (180.0, -29.0, 208.0, 2.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > GLOBAL
+            # =====================
+
+            "quete_onglet_actif_rectangle": (38.0, -29.0, 101.0, 2.0),
+            # > Surbrillance de l’onglet AND NOW actif. Format : Rectangle.
+            # > Valeur de départ IT : (38.0, -29.0, 101.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE
+            # =====================
+
+            "quete_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP HAUT > DROITE > TITRE > ICON A DROITE
+            # =====================
+
+            "quete_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "ET MAINTENANT".
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > SCROLL BOUTTON QUÊTES GAUCHE
+            # =====================
+
+            "quete_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Bouton/flèche HAUT. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 52.0, 36.0, 72.0)
+
+            "quete_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Bouton/flèche BAS. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP GAUCHE > QUÊTES
+            # =====================
+
+            "quete_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Zone complète de la liste des quêtes. Format : Rectangle.
+            # > Valeur de départ IT : (38.0, 32.0, 272.0, 286.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > SOUS-TITRE DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_sous_titre_rectangle": (280.0, 25.0, 460.0, 65.0),
+            # > Zone du sous-titre visible au-dessus de la description. Format : Rectangle.
+            # > Valeur de départ IT : (280.0, 25.0, 460.0, 65.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP DROITE > DESCRIPTION QUÊTE
+            # =====================
+
+            "quete_description_rectangle": (280.0, 75.0, 482.0, 350.0),
+            # > Zone du texte de description à droite. Format : Rectangle.
+            # > Valeur de départ IT : (280.0, 75.0, 482.0, 350.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET AND NOW > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "quete_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide PAGE gauche. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 353.0, 170.0, 385.0)
+
+            "quete_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide HAUT/BAS centre. Format : Rectangle.
+            # > Valeur de départ IT : (171.0, 353.0, 340.0, 385.0)
+
+            "quete_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide RETOUR droite. Format : Rectangle.
+            # > Valeur de départ IT : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > GLOBAL
+            # =====================
+
+            "fille_onglet_actif_rectangle": (70.0, -29.0, 133.0, 2.0),
+            # > Surbrillance onglet FILLES actif. Format : Rectangle.
+            # > Valeur de départ IT : (70.0, -29.0, 133.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE  "FILLES"
+            # =====================
+
+            "fille_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP HAUT > DROITE > TITRE > ICON A DROITE "FILLES"
+            # =====================
+
+            "fille_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "FILLES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP GAUCHE > lISTE FILLE
+            # =====================
+
+            "fille_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des filles à gauche. Format : Rectangle.
+            # > Valeur de départ IT : (38.0, 32.0, 272.0, 286.0)
+
+            "fille_image_principale_rectangle": (311.0, 22.0, 439.0, 150.0),
+            # > Grande image/portrait à droite. Format : Rectangle.
+            # > Valeur de départ IT : (311.0, 22.0, 439.0, 150.0)
+
+            "fille_icone_rectangle": (343.0, 210.0, 407.0, 274.0),
+            # > Icône/image secondaire à droite. Format : Rectangle.
+            # > Valeur de départ IT : (343.0, 210.0, 407.0, 274.0)
+
+            "fille_token_texte_rectangle": (311.0, 285.0, 439.0, 315.0),
+            # > Zone texte/token en bas à droite. Format : Rectangle.
+            # > Valeur de départ IT : (311.0, 285.0, 439.0, 315.0)
+
+            "fille_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche HAUT. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 52.0, 36.0, 72.0)
+
+            "fille_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche BAS. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP DROITE > HISTORIQUE
+            # =====================
+
+            "fille_texte_milieu_rectangle": (311.0, 175.0, 439.0, 205.0),
+            # > Zone texte centrale à droite. Format : Rectangle.
+            # > Valeur de départ IT : (311.0, 175.0, 439.0, 205.0)
+
+            "fille_historique_fond_rectangle": (48.0, 36.0, 592.0, 377.0),
+            # > Zone écran historique fille. Format : Rectangle.
+            # > Valeur de départ IT : (48.0, 36.0, 592.0, 377.0)
+
+            "fille_historique_titre_rectangle": (335.0, 90.0, 463.0, 110.0),
+            # > Titre/nom dans historique. Format : Rectangle.
+            # > Valeur de départ IT : (335.0, 90.0, 463.0, 110.0)
+
+            "fille_historique_image_rectangle": (335.0, 120.0, 463.0, 248.0),
+            # > Image historique. Format : Rectangle.
+            # > Valeur de départ IT : (335.0, 120.0, 463.0, 248.0)
+
+            "fille_historique_liste_titre_rectangle": (38.0, 30.0, 272.0, 55.0),
+            # > Titre liste historique. Format : Rectangle.
+            # > Valeur de départ IT : (38.0, 30.0, 272.0, 55.0)
+
+            "fille_historique_liste_rectangle": (38.0, 70.0, 272.0, 295.0),
+            # > Liste historique. Format : Rectangle.
+            # > Valeur de départ IT : (38.0, 70.0, 272.0, 295.0)
+
+            "fille_historique_scroll_haut_rectangle": (16.0, 90.0, 36.0, 110.0),
+            # > Flèche haut historique. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 90.0, 36.0, 110.0)
+
+            "fille_historique_scroll_bas_rectangle": (16.0, 260.0, 36.0, 280.0),
+            # > Flèche bas historique. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 260.0, 36.0, 280.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET FILLES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "fille_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 353.0, 123.0, 385.0)
+
+            "fille_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ IT : (124.0, 353.0, 251.0, 385.0)
+
+            "fille_aide_selection_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (252.0, 353.0, 390.0, 385.0)
+
+            "fille_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > GLOBAL
+            # =====================
+
+            "tenue_onglet_actif_rectangle": (101.0, -29.0, 164.0, 2.0),
+            # > Surbrillance onglet TENUE actif. Format : Rectangle.
+            # > Valeur de départ IT : (101.0, -29.0, 164.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE  "TENU"
+            # =====================
+
+            "tenue_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP HAUT > DROITE > TITRE > ICON A DROITE "TENU"
+            # =====================
+
+            "tenue_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "TENU".
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP GAUCHE > LISTE TENU
+            # =====================
+
+            "tenue_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des tenues à gauche. Format : Rectangle.
+            # > Valeur de départ IT : (38.0, 32.0, 272.0, 286.0)
+
+            "tenue_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 52.0, 36.0, 72.0)
+
+            "tenue_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET TENU > CORP DROITE > AFFICHE TENU
+            # =====================
+
+            "tenue_sous_titre_rectangle": (291.0, 247.0, 495.0, 262.0),
+            # > Sous-titre ACCESSOIRES affiché dans le corps droit.
+
+            "tenue_accessoire_1_rectangle": (291.0, 262.0, 336.0, 314.0),
+            # > Emplacement accessoire 1. Format : Rectangle.
+            # > Valeur de départ IT : (291.0, 262.0, 336.0, 314.0)
+
+            "tenue_accessoire_2_rectangle": (344.0, 262.0, 389.0, 314.0),
+            # > Emplacement accessoire 2. Format : Rectangle.
+            # > Valeur de départ IT : (344.0, 262.0, 389.0, 314.0)
+
+            "tenue_accessoire_3_rectangle": (397.0, 262.0, 442.0, 314.0),
+            # > Emplacement accessoire 3. Format : Rectangle.
+            # > Valeur de départ IT : (397.0, 262.0, 442.0, 314.0)
+
+            "tenue_accessoire_4_rectangle": (450.0, 262.0, 495.0, 314.0),
+            # > Emplacement accessoire 4. Format : Rectangle.
+            # > Valeur de départ IT : (450.0, 262.0, 495.0, 314.0)
+
+
+            # =====================
+            # LIVRE NOIR > OONGLET TENU > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > GLOBAL
+            # =====================
+
+            "objet_onglet_actif_rectangle": (131.0, -29.0, 194.0, 2.0),
+            # > Surbrillance onglet OBJET actif. Format : Rectangle.
+            # > Valeur de départ IT : (131.0, -29.0, 194.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE  "OBJETS"
+            # =====================
+
+            "objet_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP HAUT > DROITE > TITRE  "OBJETS" > RIGHT ICON
+            # =====================
+
+            "objet_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "OBJETS".
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP GAUCHE > LIST OBJET
+            # =====================
+
+            "objet_liste_rectangle": (38.0, 32.0, 272.0, 286.0),
+            # > Liste des objets à gauche. Format : Rectangle.
+            # > Valeur de départ IT : (38.0, 32.0, 272.0, 286.0)
+
+            "objet_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 52.0, 36.0, 72.0)
+
+            "objet_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP DROITE > DESCRIPTION OBJET
+            # =====================
+
+            "objet_image_rectangle": (343.0, 54.0, 407.0, 118.0),
+            # > Image de l’objet sélectionné. Format : Rectangle.
+            # > Valeur de départ IT : (343.0, 54.0, 407.0, 118.0)
+
+            "objet_description_rectangle": (280.0, 130.0, 460.0, 400.0),
+            # > Description de l’objet à droite. Format : Rectangle.
+            # > Valeur de départ IT : (280.0, 130.0, 460.0, 400.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET ONJETS > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "objet_aide_page_rectangle": (0.0, 353.0, 123.0, 385.0),
+            # > Aide bas gauche. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 353.0, 123.0, 385.0)
+
+            "objet_aide_haut_bas_rectangle": (124.0, 353.0, 251.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ IT : (124.0, 353.0, 251.0, 385.0)
+
+            "objet_aide_detail_rectangle": (252.0, 353.0, 390.0, 385.0),
+            # > Aide détails. Format : Rectangle.
+            # > Valeur de départ IT : (252.0, 353.0, 390.0, 385.0)
+
+            "objet_aide_retour_rectangle": (391.0, 353.0, 507.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (391.0, 353.0, 507.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > GLOBAL
+            # =====================
+
+            "stats_onglet_actif_rectangle": (163.0, -29.0, 226.0, 2.0),
+            # > Surbrillance onglet STATISTIQUES actif. Format : Rectangle.
+            # > Valeur de départ IT : (163.0, -29.0, 226.0, 2.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE  "STATISTIQUES"
+            # =====================
+
+            "stats_titre_rectangle": (280.0, -40.0, 460.0, 10.0),
+            # > Rectangle INDÉPENDANT du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP HAUT > DROITE > TITRE  "STATISTIQUES" > RIGHT ICON
+            # =====================
+
+            "stats_titre_icone_rectangle": (470.0, -31.0, 502.0, 1.0),
+            # > Rectangle INDÉPENDANT de l’icône à droite du titre "STATISTIQUES".
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP GAUCHE > LIST STAT TYPE
+            # =====================
+
+            "stats_liste_gauche_rectangle": (38.0, 32.0, 272.0, 285.0),
+            # > Liste catégories statistiques à gauche. Format : Rectangle.
+            # > Valeur de départ IT : (38.0, 32.0, 272.0, 285.0)
+
+            "stats_item_gauche_rectangle": (0.0, 0.0, 234.0, 28.0),
+            # > Taille d’une catégorie statistiques gauche. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 234.0, 28.0)
+
+            "stats_scroll_haut_rectangle": (16.0, 52.0, 36.0, 72.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 52.0, 36.0, 72.0)
+
+            "stats_scroll_bas_rectangle": (16.0, 250.0, 36.0, 271.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ IT : (16.0, 250.0, 36.0, 271.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP DROITE > DETAIL STAT TYPE
+            # =====================
+
+            "stats_liste_droite_rectangle": (270.0, 32.0, 490.0, 286.0),
+            # > Zone valeurs statistiques à droite. Format : Rectangle.
+            # > Valeur de départ IT : (270.0, 32.0, 490.0, 286.0)
+
+            "stats_item_droite_rectangle": (0.0, 0.0, 220.0, 24.0),
+            # > Taille d’une ligne statistique droite. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 220.0, 24.0)
+
+
+            # =====================
+            # LIVRE NOIR > ONGLET STATISTIQUES > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "stats_aide_page_rectangle": (0.0, 353.0, 170.0, 385.0),
+            # > Aide page. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 353.0, 170.0, 385.0)
+
+            "stats_aide_haut_bas_rectangle": (171.0, 353.0, 340.0, 385.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ IT : (171.0, 353.0, 340.0, 385.0)
+
+            "stats_aide_retour_rectangle": (341.0, 353.0, 512.0, 385.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (341.0, 353.0, 512.0, 385.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU OPTION > GLOBAL
+            # =====================
+
+            "option_ecran_rectangle": (128.0, 92.0, 512.0, 316.0),
+            # > Zone écran OPTIONS. Format : Rectangle.
+            # > Valeur de départ IT : (128.0, 92.0, 512.0, 316.0)
+
+            "option_liste_rectangle": (-32.0, 32.0, 416.0, 206.0),
+            # > Zone de la liste OPTIONS. Format : Rectangle.
+            # > Valeur de départ IT : (-32.0, 32.0, 416.0, 206.0)
+
+            "option_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Audio/Rumble/Difficulté/Contrôleur. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # OPTION > AUDIO
+            # =====================
+
+            "audio_ecran_rectangle": (130.0, 92.0, 510.0, 313.0),
+            # > Zone écran AUDIO. Format : Rectangle.
+            # > Valeur de départ IT : (130.0, 92.0, 510.0, 313.0)
+
+            "audio_liste_rectangle": (30.0, 50.0, 150.0, 171.0),
+            # > Liste des 3 réglages audio. Format : Rectangle.
+            # > Valeur de départ IT : (30.0, 50.0, 150.0, 171.0)
+
+            "audio_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille d’une ligne audio. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 120.0, 40.0)
+
+            "audio_fleche_gauche_1_rectangle": (165.0, 63.0, 181.0, 79.0),
+            # > Flèche gauche ligne 1. Format : Rectangle.
+            # > Valeur de départ IT : (165.0, 63.0, 181.0, 79.0)
+
+            "audio_fleche_gauche_2_rectangle": (165.0, 103.0, 181.0, 119.0),
+            # > Flèche gauche ligne 2. Format : Rectangle.
+            # > Valeur de départ IT : (165.0, 103.0, 181.0, 119.0)
+
+            "audio_fleche_gauche_3_rectangle": (165.0, 143.0, 181.0, 159.0),
+            # > Flèche gauche ligne 3. Format : Rectangle.
+            # > Valeur de départ IT : (165.0, 143.0, 181.0, 159.0)
+
+            "audio_fleche_droite_1_rectangle": (329.0, 63.0, 345.0, 79.0),
+            # > Flèche droite ligne 1. Format : Rectangle.
+            # > Valeur de départ IT : (329.0, 63.0, 345.0, 79.0)
+
+            "audio_fleche_droite_2_rectangle": (329.0, 103.0, 345.0, 119.0),
+            # > Flèche droite ligne 2. Format : Rectangle.
+            # > Valeur de départ IT : (329.0, 103.0, 345.0, 119.0)
+
+            "audio_fleche_droite_3_rectangle": (329.0, 143.0, 345.0, 159.0),
+            # > Flèche droite ligne 3. Format : Rectangle.
+            # > Valeur de départ IT : (329.0, 143.0, 345.0, 159.0)
+
+            "audio_aide_gauche_droite_rectangle": (-86.0, 231.0, 190.0, 261.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ IT : (-86.0, 231.0, 190.0, 261.0)
+
+            "audio_aide_retour_rectangle": (191.0, 231.0, 319.0, 261.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (191.0, 231.0, 319.0, 261.0)
+
+            "audio_aide_selection_rectangle": (320.0, 231.0, 468.0, 261.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (320.0, 231.0, 468.0, 261.0)
+
+
+            # =====================
+            # OPTION > DIFICULTE
+            # =====================
+
+            "difficulte_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ IT : (130.0, 92.0, 510.0, 233.0)
+
+            "difficulte_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ IT : (30.0, 60.0, 150.0, 101.0)
+
+            "difficulte_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne DIFFICULTÉ. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 120.0, 40.0)
+
+            "difficulte_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ IT : (165.0, 73.0, 181.0, 89.0)
+
+            "difficulte_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ IT : (329.0, 73.0, 345.0, 89.0)
+
+            "difficulte_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ IT : (-30.0, 151.0, 116.0, 181.0)
+
+            "difficulte_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (117.0, 151.0, 264.0, 181.0)
+
+            "difficulte_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # OPTION CONTROLLER
+            # =====================
+
+            "controleur_ecran_rectangle": (48.0, 132.0, 592.0, 328.0),
+            # > Zone écran contrôleur. Format : Rectangle.
+            # > Valeur de départ IT : (48.0, 132.0, 592.0, 328.0)
+
+            "controleur_liste_rectangle": (105.0, 70.0, 245.0, 154.0),
+            # > Liste options contrôleur. Format : Rectangle.
+            # > Valeur de départ IT : (105.0, 70.0, 245.0, 154.0)
+
+            "controleur_item_rectangle": (0.0, 0.0, 140.0, 28.0),
+            # > Taille d’une ligne contrôleur. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 140.0, 28.0)
+
+            "controleur_aide_haut_bas_rectangle": (0.0, 206.0, 136.0, 236.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 206.0, 136.0, 236.0)
+
+            "controleur_aide_cycle_rectangle": (137.0, 206.0, 273.0, 236.0),
+            # > Aide cycle. Format : Rectangle.
+            # > Valeur de départ IT : (137.0, 206.0, 273.0, 236.0)
+
+            "controleur_aide_retour_rectangle": (274.0, 206.0, 409.0, 236.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (274.0, 206.0, 409.0, 236.0)
+
+            "controleur_aide_selection_rectangle": (410.0, 206.0, 545.0, 236.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (410.0, 206.0, 545.0, 236.0)
+
+
+            # =====================
+            # OPTION CONTROLLER > VIBRATION
+            # =====================
+
+            "vibration_ecran_rectangle": (130.0, 92.0, 510.0, 233.0),
+            # > Zone écran VIBRATION. Format : Rectangle.
+            # > Valeur de départ IT : (130.0, 92.0, 510.0, 233.0)
+
+            "vibration_liste_rectangle": (30.0, 60.0, 150.0, 101.0),
+            # > Zone liste VIBRATION. Format : Rectangle.
+            # > Valeur de départ IT : (30.0, 60.0, 150.0, 101.0)
+
+            "vibration_item_rectangle": (0.0, 0.0, 120.0, 40.0),
+            # > Taille ligne VIBRATION. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 120.0, 40.0)
+
+            "vibration_fleche_gauche_rectangle": (165.0, 73.0, 181.0, 89.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ IT : (165.0, 73.0, 181.0, 89.0)
+
+            "vibration_fleche_droite_rectangle": (329.0, 73.0, 345.0, 89.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ IT : (329.0, 73.0, 345.0, 89.0)
+
+            "vibration_aide_gauche_droite_rectangle": (-30.0, 151.0, 116.0, 181.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ IT : (-30.0, 151.0, 116.0, 181.0)
+
+            "vibration_aide_retour_rectangle": (117.0, 151.0, 264.0, 181.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (117.0, 151.0, 264.0, 181.0)
+
+            "vibration_aide_selection_rectangle": (265.0, 151.0, 410.0, 181.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (265.0, 151.0, 410.0, 181.0)
+
+
+            # =====================
+            # MENU OPTION > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "option_aide_haut_bas_rectangle": (-30.0, 234.0, 118.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ IT : (-30.0, 234.0, 118.0, 264.0)
+
+            "option_aide_retour_rectangle": (119.0, 234.0, 266.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (119.0, 234.0, 266.0, 264.0)
+
+            "option_aide_selection_rectangle": (267.0, 234.0, 414.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (267.0, 234.0, 414.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU PHOTO > GLOBAL
+            # =====================
+
+            "photo_menu_ecran_rectangle": (128.0, 128.0, 512.0, 272.0),
+            # > Zone écran choix PHOTO. Format : Rectangle.
+            # > Valeur de départ IT : (128.0, 128.0, 512.0, 272.0)
+
+            "photo_menu_liste_rectangle": (-32.0, 32.0, 416.0, 128.0),
+            # > Zone liste Album/Galerie. Format : Rectangle.
+            # > Valeur de départ IT : (-32.0, 32.0, 416.0, 128.0)
+
+            "photo_menu_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille d’un choix Album/Galerie. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # PHOTO > CHOIX MENU PHOTO GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # PHOTO > ALBUM
+            # =====================
+
+            "photo_album_ecran_rectangle": (64.0, 64.0, 576.0, 384.0),
+            # > Zone complète album photo. Format : Rectangle.
+            # > Valeur de départ IT : (64.0, 64.0, 576.0, 384.0)
+
+            "photo_album_titre_rectangle": (52.0, 43.0, 466.0, 73.0),
+            # > Zone titre album. Format : Rectangle.
+            # > Valeur de départ IT : (52.0, 43.0, 466.0, 73.0)
+
+            "photo_album_scroll_gauche_rectangle": (22.0, 30.0, 38.0, 46.0),
+            # > Flèche gauche. Format : Rectangle.
+            # > Valeur de départ IT : (22.0, 30.0, 38.0, 46.0)
+
+            "photo_album_scroll_droite_rectangle": (475.0, 30.0, 491.0, 46.0),
+            # > Flèche droite. Format : Rectangle.
+            # > Valeur de départ IT : (475.0, 30.0, 491.0, 46.0)
+
+            "photo_album_scroll_haut_rectangle": (30.0, 78.0, 46.0, 94.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ IT : (30.0, 78.0, 46.0, 94.0)
+
+            "photo_album_scroll_bas_rectangle": (30.0, 232.0, 46.0, 248.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ IT : (30.0, 232.0, 46.0, 248.0)
+
+            "photo_album_photo_1_rectangle": (72.0, 68.0, 190.0, 158.0),
+            # > Vignette photo 1. Format : Rectangle.
+            # > Valeur de départ IT : (72.0, 68.0, 190.0, 158.0)
+
+            "photo_album_photo_2_rectangle": (200.0, 68.0, 318.0, 158.0),
+            # > Vignette photo 2. Format : Rectangle.
+            # > Valeur de départ IT : (200.0, 68.0, 318.0, 158.0)
+
+            "photo_album_photo_3_rectangle": (328.0, 68.0, 446.0, 158.0),
+            # > Vignette photo 3. Format : Rectangle.
+            # > Valeur de départ IT : (328.0, 68.0, 446.0, 158.0)
+
+            "photo_album_photo_4_rectangle": (72.0, 168.0, 190.0, 258.0),
+            # > Vignette photo 4. Format : Rectangle.
+            # > Valeur de départ IT : (72.0, 168.0, 190.0, 258.0)
+
+            "photo_album_photo_5_rectangle": (200.0, 168.0, 318.0, 258.0),
+            # > Vignette photo 5. Format : Rectangle.
+            # > Valeur de départ IT : (200.0, 168.0, 318.0, 258.0)
+
+            "photo_album_photo_6_rectangle": (328.0, 168.0, 446.0, 258.0),
+            # > Vignette photo 6. Format : Rectangle.
+            # > Valeur de départ IT : (328.0, 168.0, 446.0, 258.0)
+
+
+            # =====================
+            # PHOTO > GALLERIE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU PHOTO > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "photo_menu_aide_haut_bas_rectangle": (-20.0, 154.0, 128.0, 184.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ IT : (-20.0, 154.0, 128.0, 184.0)
+
+            "photo_menu_aide_retour_rectangle": (129.0, 154.0, 256.0, 184.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (129.0, 154.0, 256.0, 184.0)
+
+            "photo_menu_aide_selection_rectangle": (257.0, 154.0, 404.0, 184.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (257.0, 154.0, 404.0, 184.0)
+
+            "photo_album_aide_navigation_rectangle": (32.0, 330.0, 190.0, 360.0),
+            # > Aide navigation. Format : Rectangle.
+            # > Valeur de départ IT : (32.0, 330.0, 190.0, 360.0)
+
+            "photo_album_aide_zoom_rectangle": (201.0, 330.0, 318.0, 360.0),
+            # > Aide zoom. Format : Rectangle.
+            # > Valeur de départ IT : (201.0, 330.0, 318.0, 360.0)
+
+            "photo_album_aide_retour_rectangle": (318.0, 330.0, 447.0, 360.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (318.0, 330.0, 447.0, 360.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU EXTRA > GLOBAL
+            # =====================
+
+            "extra_ecran_rectangle": (64.0, 128.0, 576.0, 352.0),
+            # > Zone complète EXTRA. Format : Rectangle.
+            # > Valeur de départ IT : (64.0, 128.0, 576.0, 352.0)
+
+            "extra_liste_rectangle": (32.0, 32.0, 480.0, 195.0),
+            # > Zone liste EXTRA. Format : Rectangle.
+            # > Valeur de départ IT : (32.0, 32.0, 480.0, 195.0)
+
+            "extra_item_rectangle": (0.0, 0.0, 448.0, 40.0),
+            # > Taille Concept Art/Personnage/Bonus/Crédits. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 448.0, 40.0)
+
+
+            # =====================
+            # EXTRA > COMCEPT ART
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > PERSONNAGE
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # EXTRA > OPTION BONUS
+            # =====================
+
+            "bonus_ecran_rectangle": (110.0, 72.0, 530.0, 253.0),
+            # > Zone écran options bonus. Format : Rectangle.
+            # > Valeur de départ IT : (110.0, 72.0, 530.0, 253.0)
+
+            "bonus_liste_rectangle": (30.0, 60.0, 190.0, 141.0),
+            # > Zone liste options bonus. Format : Rectangle.
+            # > Valeur de départ IT : (30.0, 60.0, 190.0, 141.0)
+
+            "bonus_item_rectangle": (0.0, 0.0, 160.0, 40.0),
+            # > Taille d’une option bonus. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 0.0, 160.0, 40.0)
+
+            "bonus_aide_gauche_droite_rectangle": (0.0, 191.0, 140.0, 221.0),
+            # > Aide gauche/droite. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 191.0, 140.0, 221.0)
+
+            "bonus_aide_retour_rectangle": (141.0, 191.0, 280.0, 221.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (141.0, 191.0, 280.0, 221.0)
+
+            "bonus_aide_selection_rectangle": (281.0, 191.0, 420.0, 221.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (281.0, 191.0, 420.0, 221.0)
+
+
+            # =====================
+            # EXTRA > OREDIT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # MENU EXTRA > CORP BAS > AIDE BOUTTON EN BAS
+            # =====================
+
+            "extra_aide_haut_bas_rectangle": (0.0, 236.0, 170.0, 264.0),
+            # > Aide haut/bas. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 236.0, 170.0, 264.0)
+
+            "extra_aide_retour_rectangle": (171.0, 236.0, 340.0, 264.0),
+            # > Aide retour. Format : Rectangle.
+            # > Valeur de départ IT : (171.0, 236.0, 340.0, 264.0)
+
+            "extra_aide_selection_rectangle": (341.0, 236.0, 512.0, 264.0),
+            # > Aide sélection. Format : Rectangle.
+            # > Valeur de départ IT : (341.0, 236.0, 512.0, 264.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # MENU SAUVEGARDE / CHARGEMENT > GLOBAL
+            # =====================
+
+            "sauvegarde_ecran_rectangle": (64.0, 79.0, 576.0, 401.0),
+            # > Zone écran sauvegarde/chargement. Format : Rectangle.
+            # > Valeur de départ IT : (64.0, 79.0, 576.0, 401.0)
+
+            "sauvegarde_liste_rectangle": (55.0, 113.0, 457.0, 281.0),
+            # > Zone liste sauvegardes. Format : Rectangle.
+            # > Valeur de départ IT : (55.0, 113.0, 457.0, 281.0)
+
+            "sauvegarde_fleche_gauche_rectangle": (23.0, 30.0, 55.0, 62.0),
+            # > Flèche page gauche. Format : Rectangle.
+            # > Valeur de départ IT : (23.0, 30.0, 55.0, 62.0)
+
+            "sauvegarde_fleche_droite_rectangle": (457.0, 30.0, 489.0, 62.0),
+            # > Flèche page droite. Format : Rectangle.
+            # > Valeur de départ IT : (457.0, 30.0, 489.0, 62.0)
+
+            "sauvegarde_fleche_haut_rectangle": (31.0, 121.0, 46.0, 137.0),
+            # > Flèche haut. Format : Rectangle.
+            # > Valeur de départ IT : (31.0, 121.0, 46.0, 137.0)
+
+            "sauvegarde_fleche_bas_rectangle": (31.0, 257.0, 46.0, 273.0),
+            # > Flèche bas. Format : Rectangle.
+            # > Valeur de départ IT : (31.0, 257.0, 46.0, 273.0)
+
+            "sauvegarde_info_rectangle": (-42.0, 50.0, 554.0, 70.0),
+            # > Zone texte information. Format : Rectangle.
+            # > Valeur de départ IT : (-42.0, 50.0, 554.0, 70.0)
+
+            "sauvegarde_espace_libre_rectangle": (50.0, 281.0, 346.0, 309.0),
+            # > Zone texte espace libre. Format : Rectangle.
+            # > Valeur de départ IT : (50.0, 281.0, 346.0, 309.0)
+
+            "sauvegarde_bouton_sauver_rectangle": (0.0, 332.0, 170.0, 362.0),
+            # > Bouton SAUVER/CHARGER gauche. Format : Rectangle.
+            # > Valeur de départ IT : (0.0, 332.0, 170.0, 362.0)
+
+            "sauvegarde_bouton_supprimer_rectangle": (171.0, 332.0, 384.0, 362.0),
+            # > Bouton SUPPRIMER. Format : Rectangle.
+            # > Valeur de départ IT : (171.0, 332.0, 384.0, 362.0)
+
+            "sauvegarde_bouton_annuler_rectangle": (385.0, 332.0, 512.0, 362.0),
+            # > Bouton ANNULER. Format : Rectangle.
+            # > Valeur de départ IT : (385.0, 332.0, 512.0, 362.0)
+
+
+            #################################################################
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL HAUTEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL LARGEUR
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ACTIVE
+            # =====================
+
+            "gdef_s_x": 0.68,  # Aides/boutons sélectionnés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL INACTIVE
+            # =====================
+
+            "gdef_gy_x": 0.6,  # Aides/boutons grisés. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL SIZE
+            # =====================
+
+            "gdef_w_x": 0.6,  # Aides/boutons blancs. Format : décimal.
+
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ESPACEMENT
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            # =====================
+            # AIDE BOUTTON EN BAS > GLOBAL ICON
+            # =====================
+
+            # > Section réservée : aucun paramètre géométrique distinct confirmé dans les rapports PC/PS2.
+
+            #################################################################
+
+
+            # =====================
+            # TAILLES TEXTE GLOBALES
+            # =====================
+
+            # Grands titres normaux. Format : décimal, exemple 0.40.
+            "title_x": 0.3,
+
+            "title_gr_x": 0.3,  # Grands titres grisés. Format : décimal.
+
+            "title_s_x": 0.38,  # Grands titres sélectionnés. Format : décimal.
+
+            "stitle_x": 0.31,  # Titres de menu normaux. Format : décimal.
+
+            # Titres de menu sélectionnés. Format : décimal.
+            "stitle_s_x": 0.31,
+
+            "stitle_g_x": 0.31,  # Titres de menu grisés. Format : décimal.
+
+            "stitlesm_x": 0.19,  # Petits sous-titres. Format : décimal.
+
+            # Textes quêtes/onglets normaux. Format : décimal.
+            "ititle_x": 0.18,
+
+            # Textes quêtes/onglets sélectionnés. Format : décimal.
+            "ititle_s_x": 0.18,
+
+            # Textes quêtes/onglets grisés. Format : décimal.
+            "ititle_g_x": 0.18,
+
+            # Descriptions/statistiques blanches. Format : décimal.
+            "desc_wht_x": 0.48,
+
+            # Descriptions/statistiques grisées. Format : décimal.
+            "desc_gry_x": 0.48,
+
+        },
     }
 
     if langue not in profils:
@@ -7410,50 +13057,40 @@ def patch_geometrie_v3(data_root):
 
     print()
     print("=" * 70)
-    print("PATCH GEOMETRIE V3 COMPLETE")
+    print("PATCH GEOMETRIE V3 COMPLETE PAR LANGUE")
     print("Edition :", edition)
     print("Langue  :", langue.upper())
     print("=" * 70)
 
-    def fmt(v):
-        return f"{float(v):.3f}".rstrip("0").rstrip(".")
-
     def sauver(fichier, original, data):
-        if data != original:
-            # Les fichiers AUA/JAM utilisent des offsets binaires fixes.
-            # Le moindre octet ajouté ou retiré provoque notamment :
-            # "Control\\PCAssets.AUA: line 1 - syntax error".
-            if len(data) != len(original):
-                raise RuntimeError(
-                    f"[GEOMETRIE SECURITE] {fichier.name} : taille modifiee "
-                    f"({len(original)} -> {len(data)} octets). "
-                    "Ecriture annulee pour ne pas corrompre PCAssets.AUA."
-                )
-            fichier.write_bytes(data)
-            return True
-        return False
+        if data == original:
+            return False
+        if len(data) != len(original):
+            raise RuntimeError(
+                f"[GEOMETRIE SECURITE] {fichier.name} : taille modifiee "
+                f"({len(original)} -> {len(data)} octets). Ecriture annulee."
+            )
+        fichier.write_bytes(data)
+        return True
 
     def encoder_nombre_meme_taille(ancien, cible):
-        """Encode un nombre sans ajouter ni retirer le moindre octet."""
+        """Encode un nombre dans exactement le même nombre d'octets."""
         taille = len(ancien)
-
-        # Conserve autant de décimales que le champ d'origine le permet.
-        # Exemple : 0.35 -> 0.22 ; 0.505 -> 0.340 ; 0.4 -> 0.3.
         for decimales in range(max(0, taille - 2), -1, -1):
             candidat = f"{float(cible):.{decimales}f}".encode("ascii")
             if len(candidat) <= taille:
                 return candidat.ljust(taille, b" ")
-
         raise RuntimeError(
-            f"Valeur Scale {cible!r} impossible a encoder dans "
-            f"{taille} octet(s)."
-        )
+            f"Valeur {cible!r} impossible dans {taille} octet(s).")
+
+    def encoder_rectangle(rect):
+        return "Rectangle " + " ".join(f"{float(v):.1f}" for v in rect)
 
     def remplacer_style(data, nom, cible_x, etiquette):
         motif = re.compile(
             rb'(Name\s+"' + re.escape(nom.encode("ascii")) +
-            rb'".{0,600}?\bScale\s+)'
-            rb'([0-9]+\.[0-9]+)(\s+)([0-9]+\.[0-9]+)', re.DOTALL
+            rb'".{0,600}?\bScale\s+)([0-9]+\.[0-9]+)(\s+)([0-9]+\.[0-9]+)',
+            re.DOTALL
         )
         matches = list(motif.finditer(data))
         if not matches:
@@ -7465,302 +13102,313 @@ def patch_geometrie_v3(data_root):
             print("[AMBIGU]", etiquette, ":", len(matches))
             return data
         m = matches[0]
-        ancienne_x = m.group(2)
-        nouvelle_x = encoder_nombre_meme_taille(ancienne_x, cible_x)
-        if ancienne_x == nouvelle_x.rstrip():
+        nouvelle_x = encoder_nombre_meme_taille(m.group(2), cible_x)
+        if m.group(2).strip() == nouvelle_x.strip():
             compteurs["DEJA_OK"] += 1
-            print("[DEJA_OK]", etiquette, "=", ancienne_x.decode())
             return data
         remplacement = m.group(1) + nouvelle_x + m.group(3) + m.group(4)
-        if len(remplacement) != len(m.group(0)):
-            raise RuntimeError(
-                f"[GEOMETRIE SECURITE] {etiquette} : remplacement "
-                "de taille differente refuse."
-            )
         compteurs["PATCH"] += 1
-        print("[PATCH]", etiquette, m.group(
-            2).decode(), "->", nouvelle_x.decode().strip(),
-            "(taille binaire conservee)")
+        print("[PATCH]", etiquette, "->", nouvelle_x.decode().strip())
         return data[:m.start()] + remplacement + data[m.end():]
 
-    def remplacer_dans_namespace(data, namespace, ancien, nouveau, attendu, etiquette):
-        marqueur = ('NameSpace "' + namespace + '"').encode("ascii")
+    def bloc_namespace(data, namespace):
+        marqueur = ('NameSpace "' + namespace + '"').encode("latin-1")
         debut = data.find(marqueur)
         if debut < 0:
+            return None
+        fin = data.find(b'NameSpace "', debut + len(marqueur))
+        return debut, len(data) if fin < 0 else fin
+
+    def remplacer_rectangle_namespace(data, namespace, ancien_rect, nouveau_rect,
+                                      attendu, etiquette):
+        limites = bloc_namespace(data, namespace)
+        if limites is None:
             compteurs["INTROUVABLE"] += 1
             print("[INTROUVABLE]", etiquette, "- namespace", namespace)
             return data
-        fin = data.find(b'NameSpace "', debut + len(marqueur))
-        if fin < 0:
-            fin = len(data)
-        bloc = data[debut:fin]
-        nb_old, nb_new = bloc.count(ancien), bloc.count(nouveau)
-        if ancien == nouveau or (nb_old == 0 and nb_new >= attendu):
-            compteurs["DEJA_OK"] += 1
-            print("[DEJA_OK]", etiquette)
-            return data
-        if nb_old == attendu:
-            bloc = bloc.replace(ancien, nouveau, attendu)
-            compteurs["PATCH"] += 1
-            print("[PATCH]", etiquette, "x", attendu)
-            return data[:debut] + bloc + data[fin:]
-        if nb_old == 0:
-            compteurs["INTROUVABLE"] += 1
-            print("[INTROUVABLE]", etiquette)
-        else:
-            compteurs["AMBIGU"] += 1
-            print("[AMBIGU]", etiquette, "- attendu",
-                  attendu, "trouvé", nb_old)
-        return data
-
-    def remplacer_compte(data, ancien, nouveau, attendu, etiquette):
-        nb_old, nb_new = data.count(ancien), data.count(nouveau)
-        if ancien == nouveau or (nb_old == 0 and nb_new >= attendu):
-            compteurs["DEJA_OK"] += 1
-            print("[DEJA_OK]", etiquette)
-            return data
-        if nb_old == attendu:
-            compteurs["PATCH"] += 1
-            print("[PATCH]", etiquette, "x", attendu)
-            return data.replace(ancien, nouveau, attendu)
-        if nb_old == 0:
-            compteurs["INTROUVABLE"] += 1
-            print("[INTROUVABLE]", etiquette)
-        else:
-            compteurs["AMBIGU"] += 1
-            print("[AMBIGU]", etiquette, "- attendu",
-                  attendu, "trouvé", nb_old)
-        return data
-
-    def extraire_bloc_cible(data, namespace=None, name=None):
-        """Retourne (début, fin) du bloc le plus précis demandé."""
-        debut, fin = 0, len(data)
-        if namespace:
-            marqueur = ('NameSpace "' + namespace + '"').encode("latin-1")
-            debut = data.find(marqueur)
-            if debut < 0:
-                return None
-            suivant = data.find(b'NameSpace "', debut + len(marqueur))
-            fin = len(data) if suivant < 0 else suivant
-        if name:
-            zone = data[debut:fin]
-            marqueur = ('Name "' + name + '"').encode("latin-1")
-            pos = zone.find(marqueur)
-            if pos < 0:
-                return None
-            debut_nom = debut + pos
-            # Un Name se termine au Name/NameSpace suivant. On reste dans le
-            # namespace courant afin de ne jamais toucher un autre menu.
-            candidats = []
-            for m in (b'\n\tName "', b'\n\t\tName "', b'\nName "'):
-                x = data.find(m, debut_nom + len(marqueur), fin)
-                if x >= 0:
-                    candidats.append(x)
-            if candidats:
-                fin = min(candidats)
-            debut = debut_nom
-        return debut, fin
-
-    def appliquer_regle_manuelle(fichier, data, regle):
-        """Modifie un champ ciblé sans replace global et sans toucher aux autres."""
-        if not regle.get("actif", False):
-            return data
-        namespace = regle.get("namespace")
-        name = regle.get("name")
-        champ = str(regle.get("champ", "")).strip()
-        occurrence = int(regle.get("occurrence", 1))
-        valeur = str(regle.get("valeur", ""))
-        etiquette = regle.get("etiquette") or (
-            f"{fichier.name} / {namespace or '*'} / {name or '*'} / "
-            f"{champ}[{occurrence}]"
-        )
-        if champ not in {"Rectangle", "Position", "Scale", "Style", "Name", "NameSpace"}:
-            compteurs["AMBIGU"] += 1
-            print("[AMBIGU] Champ manuel non géré :", champ)
-            return data
-        limites = extraire_bloc_cible(data, namespace, name)
-        if limites is None:
-            compteurs["INTROUVABLE"] += 1
-            print("[INTROUVABLE]", etiquette)
-            return data
         debut, fin = limites
         bloc = data[debut:fin]
-        # Valeur de champ sur une ligne. Conserve indentation et fin de ligne.
-        motif = re.compile(
-            rb'(?m)^(?P<indent>[ \t]*)' + re.escape(champ.encode("ascii")) +
-            rb'(?P<sep>[ \t]+)(?P<value>[^\r\n]*)(?P<eol>\r?\n|$)'
-        )
-        matches = list(motif.finditer(bloc))
-        if occurrence < 1 or occurrence > len(matches):
-            compteurs["INTROUVABLE"] += 1
-            print("[INTROUVABLE]", etiquette, "- occurrences :", len(matches))
+        ancien = encoder_rectangle(ancien_rect).encode("ascii")
+        nouveau_txt = encoder_rectangle(nouveau_rect).encode("ascii")
+
+        # Même taille obligatoire : on autorise des espaces de remplissage en fin de ligne.
+        if len(nouveau_txt) > len(ancien):
+            compteurs["AMBIGU"] += 1
+            print("[REFUSE TAILLE]", etiquette, "-", nouveau_txt.decode())
             return data
-        m = matches[occurrence - 1]
-        ancienne = m.group("value").decode("latin-1", errors="replace").strip()
-        if champ in {"Name", "NameSpace", "Style"} and not valeur.startswith('"'):
-            valeur_ecrite = '"' + valeur + '"'
-        else:
-            valeur_ecrite = valeur
-        nouvelle = valeur_ecrite.encode("latin-1")
-        if m.group("value").strip() == nouvelle:
+        nouveau = nouveau_txt.ljust(len(ancien), b" ")
+        nb_old = bloc.count(ancien)
+        nb_new = bloc.count(nouveau)
+        if ancien_rect == nouveau_rect or (nb_old == 0 and nb_new >= attendu):
             compteurs["DEJA_OK"] += 1
-            print("[DEJA_OK]", etiquette, "=", valeur_ecrite)
             return data
-        remplacement = m.group("indent") + champ.encode("ascii") + \
-            m.group("sep") + nouvelle + m.group("eol")
-        bloc = bloc[:m.start()] + remplacement + bloc[m.end():]
-        compteurs["PATCH"] += 1
-        print("[PATCH MANUEL]", etiquette, ancienne, "->", valeur_ecrite)
+        if nb_old < attendu:
+            compteurs["INTROUVABLE"] += 1
+            print("[INTROUVABLE]", etiquette,
+                  "attendu", attendu, "trouve", nb_old)
+            return data
+        # Pour les éléments partagés (items), le profil pilote volontairement toutes
+        # les occurrences identiques du namespace. Pour un élément unique : attendu=1.
+        bloc = bloc.replace(ancien, nouveau, attendu)
+        compteurs["PATCH"] += attendu
+        print("[PATCH]", etiquette, "x", attendu,
+              ancien.decode(), "->", nouveau_txt.decode())
         return data[:debut] + bloc + data[fin:]
 
     # ============================================================
-    # APPINIT.JAM : RÉGLAGES FR EXISTANTS CONSERVÉS
+    # CORRESPONDANCE PROFIL -> JAM
+    # ============================================================
+    # Chaque clé visible dans le profil est reliée ici à sa valeur PC d'origine.
+    # Tu n'as PAS besoin de modifier cette table pour régler l'interface :
+    # tu modifies seulement les valeurs du bloc EN/FR/DE/ES/IT ci-dessus.
+    CIBLES_RECTANGLES = {
+        "menu_principal_rectangle": ("IntrFram.JAM", "Intro", (201.0, 250.0, 421.0, 355.0), 1),
+        "menu_principal_nouvelle_partie_rectangle": ("IntrFram.JAM", "Intro", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_principal_charger_rectangle": ("IntrFram.JAM", "Intro", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_principal_quitter_rectangle": ("IntrFram.JAM", "Intro", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_principal_texte_demarrer_rectangle": ("IntrFram.JAM", "Intro", (84.0, 285.0, 576.0, 320.0), 1),
+        "menu_pause_ecran_rectangle": ("AppInit.JAM", "PausMenu", (160.0, 101.0, 480.0, 379.0), 1),
+        "menu_pause_liste_rectangle": ("AppInit.JAM", "PausMenu", (50.0, 32.0, 270.0, 243.0), 1),
+        "menu_pause_bouton_1_rectangle": ("AppInit.JAM", "PausMenu", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_pause_bouton_2_rectangle": ("AppInit.JAM", "PausMenu", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_pause_bouton_3_rectangle": ("AppInit.JAM", "PausMenu", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_pause_bouton_4_rectangle": ("AppInit.JAM", "PausMenu", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_pause_bouton_5_rectangle": ("AppInit.JAM", "PausMenu", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_pause_bouton_6_rectangle": ("AppInit.JAM", "PausMenu", (0.0, 0.0, 220.0, 35.0), 1),
+        "menu_pause_aide_haut_bas_rectangle": ("AppInit.JAM", "PausMenu", (-80.0, 288.0, 86.0, 318.0), 1),
+        "menu_pause_aide_retour_rectangle": ("AppInit.JAM", "PausMenu", (87.0, 288.0, 233.0, 318.0), 1),
+        "menu_pause_aide_selection_rectangle": ("AppInit.JAM", "PausMenu", (234.0, 288.0, 400.0, 318.0), 1),
+        "livre_noir_fond_rectangle": ("Levels/*.JAM", "BBook", (64.0, 63.0, 576.0, 407.0), 1),
+        "onglet_quete_inactif_rectangle": ("Levels/*.JAM", "BBook", (55.0, -29.0, 83.0, 2.0), 1),
+        "onglet_filles_inactif_rectangle": ("Levels/*.JAM", "BBook", (87.0, -29.0, 115.0, 2.0), 1),
+        "onglet_tenue_inactif_rectangle": ("Levels/*.JAM", "BBook", (118.0, -29.0, 146.0, 2.0), 1),
+        "onglet_objet_inactif_rectangle": ("Levels/*.JAM", "BBook", (148.0, -29.0, 176.0, 2.0), 1),
+        "onglet_stats_inactif_rectangle": ("Levels/*.JAM", "BBook", (180.0, -29.0, 208.0, 2.0), 1),
+        # Titres du Livre noir : chaque onglet est piloté séparément.
+        "quete_titre_rectangle": ("Levels/*.JAM", "Quests", (280.0, -40.0, 460.0, 10.0), 1),
+        "quete_titre_icone_rectangle": ("Levels/*.JAM", "Quests", (470.0, -31.0, 502.0, 1.0), 1),
+        "fille_titre_rectangle": ("Levels/*.JAM", "GirlDetl", (280.0, -40.0, 460.0, 10.0), 1),
+        "fille_titre_icone_rectangle": ("Levels/*.JAM", "GirlDetl", (470.0, -31.0, 502.0, 1.0), 1),
+        "tenue_titre_rectangle": ("Levels/*.JAM", "Costume", (280.0, -40.0, 460.0, 10.0), 1),
+        "tenue_titre_icone_rectangle": ("Levels/*.JAM", "Costume", (470.0, -31.0, 502.0, 1.0), 1),
+        "objet_titre_rectangle": ("Levels/*.JAM", "Invntory", (280.0, -40.0, 460.0, 10.0), 1),
+        "objet_titre_icone_rectangle": ("Levels/*.JAM", "Invntory", (470.0, -31.0, 502.0, 1.0), 1),
+        "stats_titre_rectangle": ("Levels/*.JAM", "Stats", (280.0, -40.0, 460.0, 10.0), 1),
+        "stats_titre_icone_rectangle": ("Levels/*.JAM", "Stats", (470.0, -31.0, 502.0, 1.0), 1),
+        "livre_noir_item_rectangle": ("Levels/*.JAM", "BBook", (0.0, 0.0, 234.0, 28.0), 160),
+        "livre_noir_item_icone_rectangle": ("Levels/*.JAM", "BBook", (0.0, 4.0, 20.0, 24.0), 1),
+        "livre_noir_item_texte_marge_rectangle": ("Levels/*.JAM", "BBook", (25.0, 0.0, 25.0, 0.0), 1),
+        "quete_onglet_actif_rectangle": ("Levels/*.JAM", "Quests", (38.0, -29.0, 101.0, 2.0), 1),
+        "quete_liste_rectangle": ("Levels/*.JAM", "Quests", (38.0, 32.0, 272.0, 286.0), 1),
+        "quete_description_rectangle": ("Levels/*.JAM", "Quests", (261.0, 75.0, 482.0, 350.0), 1),
+        "quete_sous_titre_rectangle": ("Levels/*.JAM", "Quests", (280.0, 25.0, 460.0, 65.0), 1),
+        "quete_scroll_haut_rectangle": ("Levels/*.JAM", "Quests", (16.0, 52.0, 36.0, 72.0), 1),
+        "quete_scroll_bas_rectangle": ("Levels/*.JAM", "Quests", (16.0, 250.0, 36.0, 271.0), 1),
+        "quete_aide_page_rectangle": ("Levels/*.JAM", "Quests", (0.0, 353.0, 170.0, 385.0), 1),
+        "quete_aide_haut_bas_rectangle": ("Levels/*.JAM", "Quests", (171.0, 353.0, 340.0, 385.0), 1),
+        "quete_aide_retour_rectangle": ("Levels/*.JAM", "Quests", (341.0, 353.0, 512.0, 385.0), 1),
+        "fille_onglet_actif_rectangle": ("Levels/*.JAM", "GirlDetl", (70.0, -29.0, 133.0, 2.0), 1),
+        "fille_liste_rectangle": ("Levels/*.JAM", "GirlDetl", (38.0, 32.0, 272.0, 286.0), 1),
+        "fille_image_principale_rectangle": ("Levels/*.JAM", "GirlDetl", (311.0, 22.0, 439.0, 150.0), 1),
+        "fille_texte_milieu_rectangle": ("Levels/*.JAM", "GirlDetl", (311.0, 175.0, 439.0, 205.0), 1),
+        "fille_icone_rectangle": ("Levels/*.JAM", "GirlDetl", (343.0, 210.0, 407.0, 274.0), 1),
+        "fille_token_texte_rectangle": ("Levels/*.JAM", "GirlDetl", (311.0, 285.0, 439.0, 315.0), 1),
+        "fille_scroll_haut_rectangle": ("Levels/*.JAM", "GirlDetl", (16.0, 52.0, 36.0, 72.0), 1),
+        "fille_scroll_bas_rectangle": ("Levels/*.JAM", "GirlDetl", (16.0, 250.0, 36.0, 271.0), 1),
+        "fille_aide_page_rectangle": ("Levels/*.JAM", "GirlDetl", (0.0, 353.0, 123.0, 385.0), 1),
+        "fille_aide_haut_bas_rectangle": ("Levels/*.JAM", "GirlDetl", (124.0, 353.0, 251.0, 385.0), 1),
+        "fille_aide_selection_rectangle": ("Levels/*.JAM", "GirlDetl", (252.0, 353.0, 390.0, 385.0), 1),
+        "fille_aide_retour_rectangle": ("Levels/*.JAM", "GirlDetl", (391.0, 353.0, 507.0, 385.0), 1),
+        "fille_historique_fond_rectangle": ("Levels/*.JAM", "GirlHist", (48.0, 36.0, 592.0, 377.0), 1),
+        "fille_historique_titre_rectangle": ("Levels/*.JAM", "GirlHist", (335.0, 90.0, 463.0, 110.0), 1),
+        "fille_historique_image_rectangle": ("Levels/*.JAM", "GirlHist", (335.0, 120.0, 463.0, 248.0), 1),
+        "fille_historique_liste_titre_rectangle": ("Levels/*.JAM", "GirlHist", (38.0, 30.0, 272.0, 55.0), 1),
+        "fille_historique_liste_rectangle": ("Levels/*.JAM", "GirlHist", (38.0, 70.0, 272.0, 295.0), 1),
+        "fille_historique_scroll_haut_rectangle": ("Levels/*.JAM", "GirlHist", (16.0, 90.0, 36.0, 110.0), 1),
+        "fille_historique_scroll_bas_rectangle": ("Levels/*.JAM", "GirlHist", (16.0, 260.0, 36.0, 280.0), 1),
+        "tenue_onglet_actif_rectangle": ("Levels/*.JAM", "Costume", (101.0, -29.0, 164.0, 2.0), 1),
+        "tenue_liste_rectangle": ("Levels/*.JAM", "Costume", (38.0, 32.0, 272.0, 286.0), 1),
+        "tenue_sous_titre_rectangle": ("Levels/*.JAM", "Costume", (291.0, 247.0, 495.0, 262.0), 1),
+        "tenue_accessoire_1_rectangle": ("Levels/*.JAM", "Costume", (291.0, 262.0, 336.0, 314.0), 1),
+        "tenue_accessoire_2_rectangle": ("Levels/*.JAM", "Costume", (344.0, 262.0, 389.0, 314.0), 1),
+        "tenue_accessoire_3_rectangle": ("Levels/*.JAM", "Costume", (397.0, 262.0, 442.0, 314.0), 1),
+        "tenue_accessoire_4_rectangle": ("Levels/*.JAM", "Costume", (450.0, 262.0, 495.0, 314.0), 1),
+        "tenue_scroll_haut_rectangle": ("Levels/*.JAM", "Costume", (16.0, 52.0, 36.0, 72.0), 1),
+        "tenue_scroll_bas_rectangle": ("Levels/*.JAM", "Costume", (16.0, 250.0, 36.0, 271.0), 1),
+        "objet_onglet_actif_rectangle": ("Levels/*.JAM", "Invntory", (131.0, -29.0, 194.0, 2.0), 1),
+        "objet_liste_rectangle": ("Levels/*.JAM", "Invntory", (38.0, 32.0, 272.0, 286.0), 1),
+        "objet_image_rectangle": ("Levels/*.JAM", "Invntory", (343.0, 54.0, 407.0, 118.0), 1),
+        "objet_description_rectangle": ("Levels/*.JAM", "Invntory", (280.0, 130.0, 460.0, 400.0), 1),
+        "objet_scroll_haut_rectangle": ("Levels/*.JAM", "Invntory", (16.0, 52.0, 36.0, 72.0), 1),
+        "objet_scroll_bas_rectangle": ("Levels/*.JAM", "Invntory", (16.0, 250.0, 36.0, 271.0), 1),
+        "objet_aide_page_rectangle": ("Levels/*.JAM", "Invntory", (0.0, 353.0, 123.0, 385.0), 1),
+        "objet_aide_haut_bas_rectangle": ("Levels/*.JAM", "Invntory", (124.0, 353.0, 251.0, 385.0), 1),
+        "objet_aide_detail_rectangle": ("Levels/*.JAM", "Invntory", (252.0, 353.0, 390.0, 385.0), 1),
+        "objet_aide_retour_rectangle": ("Levels/*.JAM", "Invntory", (391.0, 353.0, 507.0, 385.0), 1),
+        "stats_onglet_actif_rectangle": ("Levels/*.JAM", "Stats", (163.0, -29.0, 226.0, 2.0), 1),
+        "stats_liste_gauche_rectangle": ("Levels/*.JAM", "Stats", (38.0, 32.0, 272.0, 285.0), 1),
+        "stats_item_gauche_rectangle": ("Levels/*.JAM", "Stats", (0.0, 0.0, 234.0, 28.0), 1),
+        "stats_liste_droite_rectangle": ("Levels/*.JAM", "Stats", (270.0, 32.0, 490.0, 286.0), 1),
+        "stats_item_droite_rectangle": ("Levels/*.JAM", "Stats", (0.0, 0.0, 220.0, 24.0), 1),
+        "stats_scroll_haut_rectangle": ("Levels/*.JAM", "Stats", (16.0, 52.0, 36.0, 72.0), 1),
+        "stats_scroll_bas_rectangle": ("Levels/*.JAM", "Stats", (16.0, 250.0, 36.0, 271.0), 1),
+        "stats_aide_page_rectangle": ("Levels/*.JAM", "Stats", (0.0, 353.0, 170.0, 385.0), 1),
+        "stats_aide_haut_bas_rectangle": ("Levels/*.JAM", "Stats", (171.0, 353.0, 340.0, 385.0), 1),
+        "stats_aide_retour_rectangle": ("Levels/*.JAM", "Stats", (341.0, 353.0, 512.0, 385.0), 1),
+        "option_ecran_rectangle": ("AppInit.JAM", "Options", (128.0, 92.0, 512.0, 316.0), 1),
+        "option_liste_rectangle": ("AppInit.JAM", "Options", (-32.0, 32.0, 416.0, 206.0), 1),
+        "option_item_rectangle": ("AppInit.JAM", "Options", (0.0, 0.0, 448.0, 40.0), 4),
+        "option_aide_haut_bas_rectangle": ("AppInit.JAM", "Options", (-30.0, 234.0, 118.0, 264.0), 1),
+        "option_aide_retour_rectangle": ("AppInit.JAM", "Options", (119.0, 234.0, 266.0, 264.0), 1),
+        "option_aide_selection_rectangle": ("AppInit.JAM", "Options", (267.0, 234.0, 414.0, 264.0), 1),
+        "audio_ecran_rectangle": ("AppInit.JAM", "Audio", (130.0, 92.0, 510.0, 313.0), 1),
+        "audio_liste_rectangle": ("AppInit.JAM", "Audio", (30.0, 50.0, 150.0, 171.0), 1),
+        "audio_item_rectangle": ("AppInit.JAM", "Audio", (0.0, 0.0, 120.0, 40.0), 3),
+        "audio_fleche_gauche_1_rectangle": ("AppInit.JAM", "Audio", (165.0, 63.0, 181.0, 79.0), 1),
+        "audio_fleche_gauche_2_rectangle": ("AppInit.JAM", "Audio", (165.0, 103.0, 181.0, 119.0), 1),
+        "audio_fleche_gauche_3_rectangle": ("AppInit.JAM", "Audio", (165.0, 143.0, 181.0, 159.0), 1),
+        "audio_fleche_droite_1_rectangle": ("AppInit.JAM", "Audio", (329.0, 63.0, 345.0, 79.0), 1),
+        "audio_fleche_droite_2_rectangle": ("AppInit.JAM", "Audio", (329.0, 103.0, 345.0, 119.0), 1),
+        "audio_fleche_droite_3_rectangle": ("AppInit.JAM", "Audio", (329.0, 143.0, 345.0, 159.0), 1),
+        "audio_aide_gauche_droite_rectangle": ("AppInit.JAM", "Audio", (-86.0, 231.0, 190.0, 261.0), 1),
+        "audio_aide_retour_rectangle": ("AppInit.JAM", "Audio", (191.0, 231.0, 319.0, 261.0), 1),
+        "audio_aide_selection_rectangle": ("AppInit.JAM", "Audio", (320.0, 231.0, 468.0, 261.0), 1),
+        "controleur_ecran_rectangle": ("AppInit.JAM", "Cntrller", (48.0, 132.0, 592.0, 328.0), 1),
+        "controleur_liste_rectangle": ("AppInit.JAM", "Cntrller", (105.0, 70.0, 245.0, 154.0), 1),
+        "controleur_item_rectangle": ("AppInit.JAM", "Cntrller", (0.0, 0.0, 140.0, 28.0), 3),
+        "controleur_aide_haut_bas_rectangle": ("AppInit.JAM", "Cntrller", (0.0, 206.0, 136.0, 236.0), 1),
+        "controleur_aide_cycle_rectangle": ("AppInit.JAM", "Cntrller", (137.0, 206.0, 273.0, 236.0), 1),
+        "controleur_aide_retour_rectangle": ("AppInit.JAM", "Cntrller", (274.0, 206.0, 409.0, 236.0), 1),
+        "controleur_aide_selection_rectangle": ("AppInit.JAM", "Cntrller", (410.0, 206.0, 545.0, 236.0), 1),
+        "vibration_ecran_rectangle": ("AppInit.JAM", "Rumble", (130.0, 92.0, 510.0, 233.0), 1),
+        "vibration_liste_rectangle": ("AppInit.JAM", "Rumble", (30.0, 60.0, 150.0, 101.0), 1),
+        "vibration_item_rectangle": ("AppInit.JAM", "Rumble", (0.0, 0.0, 120.0, 40.0), 1),
+        "vibration_fleche_gauche_rectangle": ("AppInit.JAM", "Rumble", (165.0, 73.0, 181.0, 89.0), 1),
+        "vibration_fleche_droite_rectangle": ("AppInit.JAM", "Rumble", (329.0, 73.0, 345.0, 89.0), 1),
+        "vibration_aide_gauche_droite_rectangle": ("AppInit.JAM", "Rumble", (-30.0, 151.0, 116.0, 181.0), 1),
+        "vibration_aide_retour_rectangle": ("AppInit.JAM", "Rumble", (117.0, 151.0, 264.0, 181.0), 1),
+        "vibration_aide_selection_rectangle": ("AppInit.JAM", "Rumble", (265.0, 151.0, 410.0, 181.0), 1),
+        "difficulte_ecran_rectangle": ("AppInit.JAM", "Diffclty", (130.0, 92.0, 510.0, 233.0), 1),
+        "difficulte_liste_rectangle": ("AppInit.JAM", "Diffclty", (30.0, 60.0, 150.0, 101.0), 1),
+        "difficulte_item_rectangle": ("AppInit.JAM", "Diffclty", (0.0, 0.0, 120.0, 40.0), 1),
+        "difficulte_fleche_gauche_rectangle": ("AppInit.JAM", "Diffclty", (165.0, 73.0, 181.0, 89.0), 1),
+        "difficulte_fleche_droite_rectangle": ("AppInit.JAM", "Diffclty", (329.0, 73.0, 345.0, 89.0), 1),
+        "difficulte_aide_gauche_droite_rectangle": ("AppInit.JAM", "Diffclty", (-30.0, 151.0, 116.0, 181.0), 1),
+        "difficulte_aide_retour_rectangle": ("AppInit.JAM", "Diffclty", (117.0, 151.0, 264.0, 181.0), 1),
+        "difficulte_aide_selection_rectangle": ("AppInit.JAM", "Diffclty", (265.0, 151.0, 410.0, 181.0), 1),
+        "photo_menu_ecran_rectangle": ("AppInit.JAM", "PhotoOpt", (128.0, 128.0, 512.0, 272.0), 1),
+        "photo_menu_liste_rectangle": ("AppInit.JAM", "PhotoOpt", (-32.0, 32.0, 416.0, 128.0), 1),
+        "photo_menu_item_rectangle": ("AppInit.JAM", "PhotoOpt", (0.0, 0.0, 448.0, 40.0), 2),
+        "photo_menu_aide_haut_bas_rectangle": ("AppInit.JAM", "PhotoOpt", (-20.0, 154.0, 128.0, 184.0), 1),
+        "photo_menu_aide_retour_rectangle": ("AppInit.JAM", "PhotoOpt", (129.0, 154.0, 256.0, 184.0), 1),
+        "photo_menu_aide_selection_rectangle": ("AppInit.JAM", "PhotoOpt", (257.0, 154.0, 404.0, 184.0), 1),
+        "photo_album_ecran_rectangle": ("AppInit.JAM", "PhotoAlb", (64.0, 64.0, 576.0, 384.0), 1),
+        "photo_album_titre_rectangle": ("AppInit.JAM", "PhotoAlb", (52.0, 43.0, 466.0, 73.0), 1),
+        "photo_album_scroll_gauche_rectangle": ("AppInit.JAM", "PhotoAlb", (22.0, 30.0, 38.0, 46.0), 1),
+        "photo_album_scroll_droite_rectangle": ("AppInit.JAM", "PhotoAlb", (475.0, 30.0, 491.0, 46.0), 1),
+        "photo_album_scroll_haut_rectangle": ("AppInit.JAM", "PhotoAlb", (30.0, 78.0, 46.0, 94.0), 1),
+        "photo_album_scroll_bas_rectangle": ("AppInit.JAM", "PhotoAlb", (30.0, 232.0, 46.0, 248.0), 1),
+        "photo_album_photo_1_rectangle": ("AppInit.JAM", "PhotoAlb", (72.0, 68.0, 190.0, 158.0), 1),
+        "photo_album_photo_2_rectangle": ("AppInit.JAM", "PhotoAlb", (200.0, 68.0, 318.0, 158.0), 1),
+        "photo_album_photo_3_rectangle": ("AppInit.JAM", "PhotoAlb", (328.0, 68.0, 446.0, 158.0), 1),
+        "photo_album_photo_4_rectangle": ("AppInit.JAM", "PhotoAlb", (72.0, 168.0, 190.0, 258.0), 1),
+        "photo_album_photo_5_rectangle": ("AppInit.JAM", "PhotoAlb", (200.0, 168.0, 318.0, 258.0), 1),
+        "photo_album_photo_6_rectangle": ("AppInit.JAM", "PhotoAlb", (328.0, 168.0, 446.0, 258.0), 1),
+        "photo_album_aide_navigation_rectangle": ("AppInit.JAM", "PhotoAlb", (32.0, 330.0, 190.0, 360.0), 1),
+        "photo_album_aide_zoom_rectangle": ("AppInit.JAM", "PhotoAlb", (201.0, 330.0, 318.0, 360.0), 1),
+        "photo_album_aide_retour_rectangle": ("AppInit.JAM", "PhotoAlb", (318.0, 330.0, 447.0, 360.0), 1),
+        "extra_ecran_rectangle": ("AppInit.JAM", "Extras", (64.0, 128.0, 576.0, 352.0), 1),
+        "extra_liste_rectangle": ("AppInit.JAM", "Extras", (32.0, 32.0, 480.0, 195.0), 1),
+        "extra_item_rectangle": ("AppInit.JAM", "Extras", (0.0, 0.0, 448.0, 40.0), 4),
+        "extra_aide_haut_bas_rectangle": ("AppInit.JAM", "Extras", (0.0, 236.0, 170.0, 264.0), 1),
+        "extra_aide_retour_rectangle": ("AppInit.JAM", "Extras", (171.0, 236.0, 340.0, 264.0), 1),
+        "extra_aide_selection_rectangle": ("AppInit.JAM", "Extras", (341.0, 236.0, 512.0, 264.0), 1),
+        "bonus_ecran_rectangle": ("AppInit.JAM", "BonusOpt", (110.0, 72.0, 530.0, 253.0), 1),
+        "bonus_liste_rectangle": ("AppInit.JAM", "BonusOpt", (30.0, 60.0, 190.0, 141.0), 1),
+        "bonus_item_rectangle": ("AppInit.JAM", "BonusOpt", (0.0, 0.0, 160.0, 40.0), 2),
+        "bonus_aide_gauche_droite_rectangle": ("AppInit.JAM", "BonusOpt", (0.0, 191.0, 140.0, 221.0), 1),
+        "bonus_aide_retour_rectangle": ("AppInit.JAM", "BonusOpt", (141.0, 191.0, 280.0, 221.0), 1),
+        "bonus_aide_selection_rectangle": ("AppInit.JAM", "BonusOpt", (281.0, 191.0, 420.0, 221.0), 1),
+        "sauvegarde_ecran_rectangle": ("AppInit.JAM", "LoadGame", (64.0, 79.0, 576.0, 401.0), 1),
+        "sauvegarde_liste_rectangle": ("AppInit.JAM", "LoadGame", (55.0, 113.0, 457.0, 281.0), 1),
+        "sauvegarde_fleche_gauche_rectangle": ("AppInit.JAM", "LoadGame", (23.0, 30.0, 55.0, 62.0), 1),
+        "sauvegarde_fleche_droite_rectangle": ("AppInit.JAM", "LoadGame", (457.0, 30.0, 489.0, 62.0), 1),
+        "sauvegarde_fleche_haut_rectangle": ("AppInit.JAM", "LoadGame", (31.0, 121.0, 46.0, 137.0), 1),
+        "sauvegarde_fleche_bas_rectangle": ("AppInit.JAM", "LoadGame", (31.0, 257.0, 46.0, 273.0), 1),
+        "sauvegarde_info_rectangle": ("AppInit.JAM", "LoadGame", (-42.0, 50.0, 554.0, 70.0), 1),
+        "sauvegarde_espace_libre_rectangle": ("AppInit.JAM", "LoadGame", (50.0, 281.0, 346.0, 309.0), 1),
+        "sauvegarde_bouton_sauver_rectangle": ("AppInit.JAM", "LoadGame", (0.0, 332.0, 170.0, 362.0), 1),
+        "sauvegarde_bouton_supprimer_rectangle": ("AppInit.JAM", "LoadGame", (171.0, 332.0, 384.0, 362.0), 1),
+        "sauvegarde_bouton_annuler_rectangle": ("AppInit.JAM", "LoadGame", (385.0, 332.0, 512.0, 362.0), 1),
+    }
+
+    # ============================================================
+    # APPINIT.JAM : POLICES + MENUS / OPTIONS / PHOTO / EXTRA / SAVE
     # ============================================================
     app = pc_root / "AppInit.JAM"
     if app.exists():
         original = app.read_bytes()
         data = original
-        # On ne modifie que Scale X : le texte est condensé horizontalement
-        # sans changer sa hauteur, sa ligne de base ni l'espacement vertical.
-        # Les styles sont traités séparément car ils n'ont pas le même rôle :
-        # grands titres, choix de menu, petits libellés et aides de touches.
-        for nom, cible_x in (
-            ("TITLE", p["title_x"]),
-            ("TITLE_GR", p["title_gr_x"]),
-            ("TITLE_S", p["title_s_x"]),
-            ("STITLE", p["stitle_x"]),
-            ("STITLE_S", p["stitle_s_x"]),
-            ("STITLE_G", p["stitle_g_x"]),
-            ("STITLESM", p["stitlesm_x"]),
-            ("ITITLE", p["ititle_x"]),
-            ("ITITLE_S", p["ititle_s_x"]),
-            ("ITITLE_G", p["ititle_g_x"]),
-            # TextCC et MouseBx utilisent réellement ces polices sur PC.
-            # GDEF_CON appartient à la PS2 et n'existe pas dans AppInit PC.
-            ("GDEF_W", p["gdef_w_x"]),
-            ("GDEF_S", p["gdef_s_x"]),
-            ("GDEF_GY", p["gdef_gy_x"]),
-            # La page Statistiques n'utilise pas ITITLE pour sa colonne
-            # droite : les libellés et valeurs passent par DESC_WHT/GRY.
-            ("DESC_WHT", p["desc_wht_x"]),
-            ("DESC_GRY", p["desc_gry_x"]),
+        for nom, cle in (
+            ("TITLE", "title_x"), ("TITLE_GR",
+                                   "title_gr_x"), ("TITLE_S", "title_s_x"),
+            ("STITLE", "stitle_x"), ("STITLE_S",
+                                     "stitle_s_x"), ("STITLE_G", "stitle_g_x"),
+            ("STITLESM", "stitlesm_x"), ("ITITLE", "ititle_x"),
+            ("ITITLE_S", "ititle_s_x"), ("ITITLE_G", "ititle_g_x"),
+            ("GDEF_W", "gdef_w_x"), ("GDEF_S",
+                                     "gdef_s_x"), ("GDEF_GY", "gdef_gy_x"),
+            ("DESC_WHT", "desc_wht_x"), ("DESC_GRY", "desc_gry_x"),
         ):
             data = remplacer_style(
-                data, nom, cible_x, f"{langue.upper()} {nom}")
-
-        if langue != "en":
-            pause_x1, pause_x2 = p["pause"]
-            data = remplacer_dans_namespace(
-                data, "PausMenu",
-                b"Rectangle 50.0 32.0 270.0 243.0",
-                f"Rectangle {pause_x1:.1f} 32.0 {pause_x2:.1f} 243.0".encode(
-                    "ascii"),
-                1, langue.upper() + " PausMenu parent"
-            )
-            data = remplacer_dans_namespace(
-                data, "PausMenu", b"Rectangle 0.0 0.0 220.0 35.0",
-                f"Rectangle 0.0 0.0 {p['largeur_menu']:.1f} 35.0".encode(
-                    "ascii"),
-                6, langue.upper() + " PausMenu boutons"
-            )
-
-        # Règles manuelles AppInit : Audio, BonusOpt, Cntrller, Diffclty,
-        # LoadGame, Options, PausCine, PausMenu, PausMini, PhotoAlb, etc.
-        for regle in REGLAGES_GEOMETRIE_MANUELS.get(langue, []):
-            cible = str(regle.get("fichier", "AppInit.JAM")).replace("\\", "/")
-            if cible.lower() == "appinit.jam":
-                data = appliquer_regle_manuelle(app, data, regle)
+                data, nom, p[cle], f"{langue.upper()} {nom}")
+        for cle, (scope, ns, ancien, attendu) in CIBLES_RECTANGLES.items():
+            if scope.lower() == "appinit.jam":
+                data = remplacer_rectangle_namespace(data, ns, ancien, p[cle], attendu,
+                                                     f"{langue.upper()} {cle}")
         sauver(app, original, data)
     else:
         print("[INTROUVABLE] AppInit.JAM")
 
     # ============================================================
-    # INTRFRAM.JAM : MENU PRINCIPAL EXISTANT CONSERVÉ
+    # INTRFRAM.JAM : MENU PRINCIPAL
     # ============================================================
     intr = pc_root / "IntrFram.JAM"
     if intr.exists():
         original = intr.read_bytes()
         data = original
-        if langue != "en":
-            x1, x2 = p["principal"]
-            data = remplacer_compte(
-                data, b"Rectangle 201.0 250.0 421.0 355.0",
-                f"Rectangle {x1:.1f} 250.0 {x2:.1f} 355.0".encode("ascii"),
-                1, langue.upper() + " Menu principal parent"
-            )
-            data = remplacer_compte(
-                data, b"Rectangle 0.0 0.0 220.0 35.0",
-                f"Rectangle 0.0 0.0 {p['largeur_menu']:.1f} 35.0".encode(
-                    "ascii"),
-                3, langue.upper() + " Menu principal boutons"
-            )
-        for regle in REGLAGES_GEOMETRIE_MANUELS.get(langue, []):
-            cible = str(regle.get("fichier", "")).replace("\\", "/")
-            if cible.lower() == "intrfram.jam":
-                data = appliquer_regle_manuelle(intr, data, regle)
+        for cle, (scope, ns, ancien, attendu) in CIBLES_RECTANGLES.items():
+            if scope.lower() == "intrfram.jam":
+                data = remplacer_rectangle_namespace(data, ns, ancien, p[cle], attendu,
+                                                     f"{langue.upper()} {cle}")
         sauver(intr, original, data)
     else:
         print("[INTROUVABLE] IntrFram.JAM")
 
     # ============================================================
-    # LEVELS : LIVRE NOIR / OBJECTIFS EXISTANTS CONSERVÉS
+    # LEVELS/*.JAM : LIVRE NOIR COMPLET
     # ============================================================
     levels = pc_root / "Levels"
-    ancien = b"Rectangle 261.0 75.0 482.0 350.0"
-    nouveau = f"Rectangle {p['description_x1']:.1f} 75.0 482.0 350.0".encode(
-        "ascii")
-    niveaux_patches = 0
-    niveaux_ok = 0
     if levels.exists():
         for fichier in sorted(levels.glob("*.JAM")):
             original = fichier.read_bytes()
             data = original
-            if ancien == nouveau:
-                niveaux_ok += data.count(nouveau)
-            elif ancien in data:
-                nb = data.count(ancien)
-                data = data.replace(ancien, nouveau)
-                niveaux_patches += nb
-            elif nouveau in data:
-                niveaux_ok += data.count(nouveau)
-            for regle in REGLAGES_GEOMETRIE_MANUELS.get(langue, []):
-                cible = str(regle.get("fichier", "")).replace("\\", "/")
-                relatif = str(fichier.relative_to(pc_root)).replace("\\", "/")
-                if cible.lower() in {"levels/*.jam", relatif.lower(), fichier.name.lower()}:
-                    data = appliquer_regle_manuelle(fichier, data, regle)
+            for cle, (scope, ns, ancien, attendu) in CIBLES_RECTANGLES.items():
+                if scope.lower() == "levels/*.jam":
+                    data = remplacer_rectangle_namespace(data, ns, ancien, p[cle], attendu,
+                                                         f"{fichier.name} / {cle}")
             sauver(fichier, original, data)
+    else:
+        print("[INTROUVABLE] Levels")
 
-    # ============================================================
-    # AUTRES JAM : permet de régler n'importe quel sous-menu/onglet
-    # ============================================================
-    # Une règle peut viser par exemple "GameFram.JAM" ou "Levels/X.JAM".
-    # AppInit/IntrFram/Levels déjà traités ci-dessus ne sont pas retraités.
-    for regle in REGLAGES_GEOMETRIE_MANUELS.get(langue, []):
-        if not regle.get("actif", False):
-            continue
-        cible = str(regle.get("fichier", "")).replace("\\", "/")
-        if not cible or cible.lower() in {"appinit.jam", "intrfram.jam", "levels/*.jam"}:
-            continue
-        fichier = pc_root / Path(cible)
-        if not fichier.exists():
-            compteurs["INTROUVABLE"] += 1
-            print("[INTROUVABLE] Fichier règle manuelle :", cible)
-            continue
-        original = fichier.read_bytes()
-        data = appliquer_regle_manuelle(fichier, original, regle)
-        sauver(fichier, original, data)
+    print("-" * 70)
+    print("[V3]", edition, langue.upper(),
+          "| PATCH =", compteurs["PATCH"],
+          "| DEJA_OK =", compteurs["DEJA_OK"],
+          "| INTROUVABLE =", compteurs["INTROUVABLE"],
+          "| AMBIGU =", compteurs["AMBIGU"])
+    print("-" * 70)
 
-    print("[V3] Livre noir niveaux :", niveaux_patches,
-          "patch(es) |", niveaux_ok, "déjà OK")
-    print("-" * 70)
-    print(
-        "[V3]", edition, langue.upper(),
-        "| PATCH =", compteurs["PATCH"],
-        "| DEJA_OK =", compteurs["DEJA_OK"],
-        "| INTROUVABLE =", compteurs["INTROUVABLE"],
-        "| AMBIGU =", compteurs["AMBIGU"]
-    )
-    print("-" * 70)
 
 
 def aligner(valeur, alignement):
@@ -10480,6 +16128,8 @@ def menu(game_root, ps2_ok):
 
         print("[11] Injection PC VERSION EDIT FINI Vers le jeu PC")
 
+        print("[12] 📐 Générer le guide complet de réglage géométrique")
+
         print()
 
         print("[0] Quitter")
@@ -10662,6 +16312,9 @@ def menu(game_root, ps2_ok):
             injecter_data_version_edit_fini(
                 game_root
             )
+
+        elif choix == "12":
+            generer_guide_geometrie()    
 
         elif choix == "0":
 
