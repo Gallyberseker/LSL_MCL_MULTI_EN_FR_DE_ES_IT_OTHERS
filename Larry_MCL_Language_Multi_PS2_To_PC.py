@@ -15960,41 +15960,49 @@ def choisir_entree_audio_langue(noms, nom_pc, langue_cible):
 
 
 
-# ============================================================
-# AUDIO MINI-JEU SALLY MAE - LDRMHALL.JAM (FR)
-# ============================================================
-# Les voix du mini-jeu sont stockees dans des conteneurs ACX internes
-# au JAM2. Il faut remplacer l'ACX complet : remplacer les ADX un par un
-# casse la table d'offsets interne ACX et provoque ADXB_DecodeHeader.
+# ============================================================================
+# AUDIO JAM2 / ACX MULTILANGUE - LDRMHALL
+# ============================================================================
+# Moteur valide en jeu avec les editions PS2 FR / DE / ES / IT.
+# Principe : remplacer le CONTENEUR ACX complet par son homologue PS2,
+# puis recalculer les offsets externes JAM2. Les offsets internes ACX restent
+# ainsi ceux de la version PS2 et ne sont jamais reconstruits artificiellement.
 
-def _jam2_u16(data, pos):
-    return struct.unpack_from("<H", data, pos)[0]
+                         
+                                                 
+
+def _jam2_acx_u16(donnees, position):
+    return struct.unpack_from("<H", donnees, position)[0]
+
+                         
+                                                 
+
+def _jam2_acx_u32(donnees, position):
+    return struct.unpack_from("<I", donnees, position)[0]
 
 
-def _jam2_u32(data, pos):
-    return struct.unpack_from("<I", data, pos)[0]
-
-
-def _jam2_p32(valeur):
+def _jam2_acx_p32(valeur):
     return struct.pack("<I", valeur)
 
 
-def _lire_jam2_audio(path):
-    data = Path(path).read_bytes()
-    if data[:4] != b"JAM2":
-        raise ValueError(f"{Path(path).name}: signature JAM2 absente")
+def _jam2_acx_lire(path):
+    path = Path(path)
+    donnees = path.read_bytes()
+    if donnees[:4] != b"JAM2":
+        raise ValueError(f"{path.name}: signature JAM2 absente")
 
-    first = _jam2_u32(data, 8)
-    nb_noms = _jam2_u16(data, 28)
-    nb_ext = _jam2_u16(data, 30)
+    first = _jam2_acx_u32(donnees, 8)
+    nb_noms = _jam2_acx_u16(donnees, 28)
+    nb_ext = _jam2_acx_u16(donnees, 30)
 
     noms = [
-        data[32+i*8:32+(i+1)*8].rstrip(b"\x00 ").decode("latin-1")
+        donnees[32+i*8:32+(i+1)*8].rstrip(b"\x00 ").decode("latin-1")
         for i in range(nb_noms)
     ]
-    ext_base = 32 + nb_noms * 8
+    base_ext = 32 + nb_noms * 8
     extensions = [
-        data[ext_base+i*4:ext_base+(i+1)*4].rstrip(b"\x00 ").decode("latin-1")
+        donnees[base_ext+i*4:base_ext+(i+1)*4]
+        .rstrip(b"\x00 ").decode("latin-1")
         for i in range(nb_ext)
     ]
 
@@ -16007,61 +16015,75 @@ def _lire_jam2_audio(path):
     noms_par_offset = {}
 
     for i in range(count):
-        pos = meta + 4 + i * 8
-        fid = _jam2_u16(data, pos)
-        eid = _jam2_u16(data, pos + 2)
-        off = _jam2_u32(data, pos + 4)
-        table.append([fid, eid, off, pos + 4])
+        q = meta + 4 + i * 8
+        fid = _jam2_acx_u16(donnees, q)
+        eid = _jam2_acx_u16(donnees, q + 2)
+        off = _jam2_acx_u32(donnees, q + 4)
+        table.append([fid, eid, off, q + 4])
         if fid < len(noms) and eid < len(extensions):
             cle = (noms[fid].upper(), extensions[eid].upper())
             noms_par_offset.setdefault(off, []).append(cle)
 
-    offsets = sorted({x[2] for x in table if first <= x[2] < len(data)})
+    offsets = sorted({x[2] for x in table if first <= x[2] < len(donnees)})
     blocs = []
 
     for i, off in enumerate(offsets):
-        if off + 32 > len(data):
+        if off + 32 > len(donnees):
             raise ValueError("Bloc JAM2 tronque.")
-        cs = _jam2_u32(data, off)
-        ds = _jam2_u32(data, off + 4)
-        suivant = offsets[i+1] if i+1 < len(offsets) else len(data)
+        cs = _jam2_acx_u32(donnees, off)
+        ds = _jam2_acx_u32(donnees, off + 4)
+        suivant = offsets[i+1] if i+1 < len(offsets) else len(donnees)
         fin_data = off + 32 + cs
         if fin_data > suivant:
-            raise ValueError(f"Bloc JAM2 chevauche a 0x{off:X}")
+            raise ValueError(f"Bloc chevauche a 0x{off:X}")
         blocs.append({
             "old": off,
-            "header": bytearray(data[off:off+32]),
-            "data": bytearray(data[off+32:fin_data]),
+            "header": bytearray(donnees[off:off+32]),
+            "data": bytearray(donnees[off+32:fin_data]),
+            "tail": bytes(donnees[fin_data:suivant]),
             "cs": cs,
             "ds": ds,
             "cles": noms_par_offset.get(off, []),
         })
 
-    return {"raw": data, "first": first, "table": table, "blocs": blocs}
+    return {
+        "raw": donnees, "first": first, "meta": meta,
+        "table": table, "blocs": blocs,
+    }
 
 
-def _adx_info_jam2(data, pos):
-    if pos + 24 > len(data) or data[pos:pos+2] != b"\x80\x00":
+def _jam2_acx_adx_info(donnees, pos):
+    if pos + 24 > len(donnees) or donnees[pos:pos+2] != b"\x80\x00":
         return None
-    cri_rel = int.from_bytes(data[pos+2:pos+4], "big")
+    cri_rel = int.from_bytes(donnees[pos+2:pos+4], "big")
     cri = pos + cri_rel - 2
-    if cri < pos or cri + 6 > len(data) or data[cri:cri+6] != b"(c)CRI":
+    if cri < pos or cri + 6 > len(donnees):
         return None
-    enc, block, bits, ch = data[pos+4], data[pos+5], data[pos+6], data[pos+7]
-    rate = int.from_bytes(data[pos+8:pos+12], "big")
-    samples = int.from_bytes(data[pos+12:pos+16], "big")
-    if enc not in (2, 3, 4) or block < 3 or bits != 4 or ch not in (1, 2):
+    if donnees[cri:cri+6] != b"(c)CRI":
+                                                    
+                                                        
+                                                                          
         return None
-    if not 8000 <= rate <= 96000 or samples <= 0:
+    encoding = donnees[pos+4]
+    block = donnees[pos+5]
+    bits = donnees[pos+6]
+    canaux = donnees[pos+7]
+    frequence = int.from_bytes(donnees[pos+8:pos+12], "big")
+    samples = int.from_bytes(donnees[pos+12:pos+16], "big")
+    if encoding not in (2, 3, 4) or block <= 0 or bits <= 0:
         return None
-    frames = (samples + ((block - 2) * 2) - 1) // ((block - 2) * 2)
-    taille = (cri_rel + 4) + frames * block * ch
-    if taille <= 0 or pos + taille > len(data):
+    if canaux <= 0 or frequence <= 0 or samples <= 0:
+                                                
+                                               
+        return None
+    blocs_audio = (samples + 31) // 32
+    taille = (cri_rel + 4) + blocs_audio * block * canaux
+    if pos + taille > len(donnees):
         return None
     return {"size": taille}
 
 
-def _scanner_adx_jam2(jam):
+def _jam2_acx_scanner(jam):
     raw = jam["raw"]
     resultat = []
     pos = 0
@@ -16069,7 +16091,7 @@ def _scanner_adx_jam2(jam):
         pos = raw.find(b"\x80\x00", pos)
         if pos < 0:
             break
-        info = _adx_info_jam2(raw, pos)
+        info = _jam2_acx_adx_info(raw, pos)
         if not info:
             pos += 2
             continue
@@ -16077,116 +16099,185 @@ def _scanner_adx_jam2(jam):
             debut = bloc["old"] + 32
             fin = debut + len(bloc["data"])
             if debut <= pos and pos + info["size"] <= fin:
-                resultat.append({"bloc": bi})
+                info["bloc"] = bi
+                info["pos"] = pos - debut
+                info["abs"] = pos
+                resultat.append(info)
                 break
         pos += max(2, info["size"])
     return resultat
 
 
-def _reconstruire_jam2_audio(jam):
+def _jam2_acx_reconstruire(jam):
     prefix = bytearray(jam["raw"][:jam["first"]])
-    old_to_new = {}
+    anciens_vers_nouveaux = {}
     body = bytearray()
 
     for i, bloc in enumerate(jam["blocs"]):
-        new_off = jam["first"] + len(body)
-        old_to_new[bloc["old"]] = new_off
+        nouvel_offset = jam["first"] + len(body)
+        anciens_vers_nouveaux[bloc["old"]] = nouvel_offset
         header = bytearray(bloc["header"])
-        header[0:4] = _jam2_p32(len(bloc["data"]))
+        header[0:4] = _jam2_acx_p32(len(bloc["data"]))
+
         if bloc["cs"] == bloc["ds"]:
-            header[4:8] = _jam2_p32(len(bloc["data"]))
+            header[4:8] = _jam2_acx_p32(len(bloc["data"]))
         elif len(bloc["data"]) != bloc["cs"]:
-            raise ValueError(f"Bloc JAM2 compresse modifie a 0x{bloc['old']:X}")
+            raise ValueError(
+                f"Bloc compresse modifie a 0x{bloc['old']:X}: abandon securite."
+            )
+
         body += header + bloc["data"]
         if i + 1 < len(jam["blocs"]):
             pad = (4 - (len(bloc["data"]) % 4)) % 4
             if pad:
                 body += b"\xFF" + b"\x00" * (pad - 1)
 
-    for _, _, old, field in jam["table"]:
-        if old in old_to_new:
-            prefix[field:field+4] = _jam2_p32(old_to_new[old])
+    for _, _, ancien, champ in jam["table"]:
+        if ancien in anciens_vers_nouveaux:
+            prefix[champ:champ+4] = _jam2_acx_p32(
+                anciens_vers_nouveaux[ancien]
+            )
     return bytes(prefix + body)
 
 
-def localiser_audio_minijeu_ldrmhall(data_root, langue_cible="fr"):
-    """Injecte les ACX PS2 FR complets dans LDRMHALL.JAM PC."""
-    if normaliser_code_langue(langue_cible) != "fr":
-        return 0
+                                                                   
+                                                               
+                                                    
+                
 
-    pc_path = trouver_fichier_ci(
-        Path(data_root) / "JamFiles" / "PC" / "Levels", "LDRMHALL.JAM"
-    )
-    ps2_path = trouver_fichier_ci(
-        PS2_VERSION / "Data" / "JamFiles", "LDRMHALL.JAM"
-    )
-    if pc_path is None or ps2_path is None:
-        print("[LDRMHALL AUDIO FR] JAM PC ou PS2 introuvable.")
-        return 0
+                                 
+                                                                      
+     
+                                  
+                                                         
+     
+                                           
+                                                               
+                
 
-    pc = _lire_jam2_audio(pc_path)
-    fr = _lire_jam2_audio(ps2_path)
+def _jam2_acx_injecter(pc, ps2, langue):
+    adx_pc = _jam2_acx_scanner(pc)
+    adx_ps2 = _jam2_acx_scanner(ps2)
+    print(f"[JAM2/ACX] ADX PC : {len(adx_pc)}")
+    print(f"[JAM2/ACX] ADX PS2 {langue.upper()} : {len(adx_ps2)}")
 
-    # Le repacker doit reproduire le PC exactement AVANT toute modification.
-    if _reconstruire_jam2_audio(pc) != pc["raw"]:
-        raise RuntimeError("LDRMHALL : repack PC non byte-identique.")
+    if not adx_pc or not adx_ps2:
+        raise ValueError("Aucun flux ADX detecte : injection annulee.")
+                                                                      
 
-    adx_pc = _scanner_adx_jam2(pc)
-    adx_fr = _scanner_adx_jam2(fr)
-    blocs_pc = {x["bloc"] for x in adx_pc}
-    blocs_fr = {x["bloc"] for x in adx_fr}
+                                  
+                                  
+    blocs_pc = {a["bloc"] for a in adx_pc}
+    blocs_ps2 = {a["bloc"] for a in adx_ps2}
+    index_ps2 = {}
 
-    index_fr = {}
-    for bi in blocs_fr:
-        for nom, ext in fr["blocs"][bi]["cles"]:
+                 
+    for bi in blocs_ps2:
+        bloc = ps2["blocs"][bi]
+        for nom, ext in bloc["cles"]:
             if ext == "ACX":
-                if (nom, ext) in index_fr:
-                    raise RuntimeError(f"LDRMHALL : ACX PS2 ambigu {nom}.{ext}")
-                index_fr[(nom, ext)] = bi
+                if (nom, ext) in index_ps2:
+                    raise ValueError(f"Ressource PS2 ambigue : {nom}.{ext}")
+                index_ps2[(nom, ext)] = bi
 
     remplaces = 0
-    flux_couverts = 0
+    couverts = 0
     for bi in sorted(blocs_pc):
         bloc_pc = pc["blocs"][bi]
         cles = [(n, e) for n, e in bloc_pc["cles"] if e == "ACX"]
-        correspondances = [(cle, index_fr[cle]) for cle in cles if cle in index_fr]
+        correspondances = [
+            (cle, index_ps2[cle]) for cle in cles if cle in index_ps2
+        ]
         if len(correspondances) != 1:
             noms = ", ".join(f"{n}.{e}" for n, e in cles) or "<sans nom>"
-            raise RuntimeError(f"LDRMHALL : correspondance ACX impossible : {noms}")
-
-        cle, bi_fr = correspondances[0]
-        bloc_fr = fr["blocs"][bi_fr]
-        if bloc_pc["cs"] != bloc_pc["ds"] or bloc_fr["cs"] != bloc_fr["ds"]:
-            raise RuntimeError(f"LDRMHALL : {cle[0]}.{cle[1]} est compresse.")
-
-        nb_pc = sum(1 for x in adx_pc if x["bloc"] == bi)
-        nb_fr = sum(1 for x in adx_fr if x["bloc"] == bi_fr)
-        if nb_pc != nb_fr:
-            raise RuntimeError(
-                f"LDRMHALL : {cle[0]}.{cle[1]} ADX PC={nb_pc}, FR={nb_fr}"
+            raise ValueError(
+                f"Correspondance PS2 {langue.upper()} impossible/ambigue : {noms}"
             )
 
-        bloc_pc["data"] = bytearray(bloc_fr["data"])
-        remplaces += 1
-        flux_couverts += nb_pc
+        cle, bi_ps2 = correspondances[0]
+        bloc_ps2 = ps2["blocs"][bi_ps2]
+        if bloc_pc["cs"] != bloc_pc["ds"] or bloc_ps2["cs"] != bloc_ps2["ds"]:
+            raise ValueError(f"{cle[0]}.{cle[1]} compresse : abandon securite.")
 
-    if flux_couverts != len(adx_pc):
-        raise RuntimeError(
-            f"LDRMHALL : seulement {flux_couverts}/{len(adx_pc)} ADX couverts."
+        nb_pc = sum(1 for a in adx_pc if a["bloc"] == bi)
+        nb_ps2 = sum(1 for a in adx_ps2 if a["bloc"] == bi_ps2)
+        if nb_pc != nb_ps2:
+            raise ValueError(
+                f"{cle[0]}.{cle[1]} : nombre ADX different "
+                f"(PC={nb_pc}, PS2={nb_ps2})."
+            )
+
+        print(
+            f"[JAM2/ACX] {cle[0]}.{cle[1]} : {nb_pc} ADX | "
+            f"{len(bloc_pc['data'])} -> {len(bloc_ps2['data'])} octets"
+        )
+        bloc_pc["data"] = bytearray(bloc_ps2["data"])
+        remplaces += 1
+        couverts += nb_pc
+
+    if couverts != len(adx_pc):
+        raise ValueError(f"Seulement {couverts}/{len(adx_pc)} ADX couverts.")
+    return remplaces, couverts
+
+
+def localiser_audio_jam2_acx_multilangue(temp_data, langue_cible):
+    """Injecte l'audio ACX PS2 localise dans LDRMHALL.JAM PC en construction."""
+    langue = normaliser_code_langue(langue_cible)
+    if langue not in ("fr", "de", "es", "it"):
+        print(f"[JAM2/ACX] Langue {langue.upper()} non prise en charge : ignore.")
+        return False
+
+    pc_root = Path(temp_data) / "JamFiles" / "PC" / "Levels"
+    pc_path = pc_root / "LDRMHALL.JAM"
+    if not pc_path.is_file():
+        raise FileNotFoundError(f"LDRMHALL.JAM PC introuvable : {pc_path}")
+
+    index_ps2 = source_ps2_index()
+    ps2_path = trouver_ps2_jam(Path("Levels") / "LDRMHALL.JAM", index_ps2)
+    if ps2_path is None:
+        # Certains dumps utilisent directement le nom sans arborescence identique.
+        ps2_path = trouver_ps2_jam("LDRMHALL.JAM", index_ps2)
+    if ps2_path is None:
+        raise FileNotFoundError(
+            "LDRMHALL.JAM PS2 introuvable dans PS2_VERSION/Data/JamFiles."
         )
 
-    resultat = _reconstruire_jam2_audio(pc)
-    pc_path.write_bytes(resultat)
+    print(f"[JAM2/ACX] Langue : {langue.upper()}")
+    print(f"[JAM2/ACX] PC  : {pc_path}")
+    print(f"[JAM2/ACX] PS2 : {ps2_path}")
 
-    verification = _lire_jam2_audio(pc_path)
-    if len(_scanner_adx_jam2(verification)) != len(adx_pc):
-        raise RuntimeError("LDRMHALL : verification finale ADX incorrecte.")
+    pc = _jam2_acx_lire(pc_path)
+    ps2 = _jam2_acx_lire(ps2_path)
 
+    # Sécurité essentielle : notre repacker doit reproduire le JAM PC courant
+    # octet pour octet AVANT toute modification audio.
+    test = _jam2_acx_reconstruire(pc)
+    if test != pc["raw"]:
+        raise RuntimeError(
+            "Reconstruction JAM2 PC non byte-identique avant injection : abandon."
+        )
+
+    remplaces, attendus = _jam2_acx_injecter(pc, ps2, langue)
+    resultat = _jam2_acx_reconstruire(pc)
+
+    # Ecriture atomique : le JAM courant n'est remplacé qu'après reconstruction.
+    temporaire = pc_path.with_suffix(".JAM.jam2acx_tmp")
+    temporaire.write_bytes(resultat)
+    verification = _jam2_acx_lire(temporaire)
+    adx_finaux = _jam2_acx_scanner(verification)
+    if len(adx_finaux) != attendus:
+        temporaire.unlink(missing_ok=True)
+        raise RuntimeError(
+            f"Verification finale ADX incorrecte : {len(adx_finaux)}/{attendus}."
+        )
+
+    temporaire.replace(pc_path)
     print(
-        f"[LDRMHALL AUDIO FR] {remplaces} ACX / "
-        f"{flux_couverts} ADX injectes - mini-jeu Sally Mae FR."
+        f"[JAM2/ACX] OK : {remplaces} ACX / {attendus} ADX injectes "
+        f"pour {langue.upper()}."
     )
-    return flux_couverts
+    return True
+
 
 def construire_version_fr(game_root, langue_cible="fr"):
     """
@@ -16300,16 +16391,19 @@ def construire_version_fr(game_root, langue_cible="fr"):
             print("[ADX ERREUR]", erreur)
 
         # ========================================================
-        # MINI-JEU SALLY MAE - AUDIO ACX DANS LDRMHALL.JAM
+        # AUDIO JAM2 / ACX MULTILANGUE - LDRMHALL
         # ========================================================
-        # Correctif valide uniquement pour l'edition francaise.
-        if normaliser_code_langue(langue_cible) == "fr":
-            print("[6/8] LDRMHALL mini-jeu Sally Mae FR...")
-            try:
-                localiser_audio_minijeu_ldrmhall(temp_data, langue_cible)
-            except Exception as erreur:
-                print("[LDRMHALL AUDIO ERREUR]", erreur)
-                raise
+        # Moteur valide en jeu pour FR / DE / ES / IT.
+        print("[6/8] Audio JAM2/ACX " + langue_cible.upper() + "...")
+                                                            
+        try:
+            localiser_audio_jam2_acx_multilangue(
+                temp_data,
+                langue_cible
+            )
+        except Exception as erreur:
+            print("[JAM2/ACX ERREUR]", erreur)
+            raise
 
     else:
         print("[5/8] Audio gameplay... IGNORE")
