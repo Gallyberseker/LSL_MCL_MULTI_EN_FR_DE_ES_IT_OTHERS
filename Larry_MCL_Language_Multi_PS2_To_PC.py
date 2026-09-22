@@ -16139,20 +16139,7 @@ def _jam2_acx_reconstruire(jam):
             )
     return bytes(prefix + body)
 
-
-                                                                   
-                                                               
-                                                    
-                
-
-                                 
-                                                                      
-     
-                                  
-                                                         
-     
-                                           
-                                                               
+                                                        
                 
 
 def _jam2_acx_injecter(pc, ps2, langue):
@@ -16221,62 +16208,412 @@ def _jam2_acx_injecter(pc, ps2, langue):
 
 
 def localiser_audio_jam2_acx_multilangue(temp_data, langue_cible):
-    """Injecte l'audio ACX PS2 localise dans LDRMHALL.JAM PC en construction."""
+    """
+    Injecte automatiquement l'audio ACX PS2 localisé
+    dans TOUS les JAM PC compatibles du dossier Levels.
+
+    LANGUES :
+        FR / DE / ES / IT
+
+    PRINCIPE :
+        PC TEMP :
+            Data/JamFiles/PC/Levels/*.JAM
+
+        PS2 :
+            PS2_VERSION/Data/JamFiles/PS2/Levels/*.JAM
+
+    Pour chaque JAM :
+        1. Cherche le JAM PS2 portant le même nom.
+        2. Lit les deux structures JAM2.
+        3. Vérifie que le JAM PC peut être reconstruit
+           octet pour octet AVANT modification.
+        4. Associe les banques ACX par leur nom.
+        5. Vérifie le nombre d'ADX PC / PS2.
+        6. Injecte les ACX PS2 complets.
+        7. Reconstruit le JAM2 avec ses nouveaux offsets.
+        8. Relit le résultat et recompte les ADX.
+        9. Remplace le JAM TEMP uniquement si tout est valide.
+
+    IMPORTANT :
+        Les fichiers Steam originaux ne sont pas touchés ici.
+        Cette fonction travaille uniquement dans TEMP_DATA.
+    """
+
+    # =========================================================
+    # LANGUE
+    # =========================================================
+
     langue = normaliser_code_langue(langue_cible)
+
     if langue not in ("fr", "de", "es", "it"):
-        print(f"[JAM2/ACX] Langue {langue.upper()} non prise en charge : ignore.")
+
+        print(
+            f"[JAM2/ACX] Langue {langue.upper()} "
+            "non prise en charge : ignore."
+        )
+
         return False
 
-    pc_root = Path(temp_data) / "JamFiles" / "PC" / "Levels"
-    pc_path = pc_root / "LDRMHALL.JAM"
-    if not pc_path.is_file():
-        raise FileNotFoundError(f"LDRMHALL.JAM PC introuvable : {pc_path}")
+    # =========================================================
+    # DOSSIER PC TEMPORAIRE
+    # =========================================================
+
+    pc_root = (
+        Path(temp_data)
+        / "JamFiles"
+        / "PC"
+        / "Levels"
+    )
+
+    if not pc_root.is_dir():
+
+        raise FileNotFoundError(
+            "Dossier Levels PC introuvable : "
+            f"{pc_root}"
+        )
+
+    # =========================================================
+    # INDEX DES JAM PS2
+    # =========================================================
 
     index_ps2 = source_ps2_index()
-    ps2_path = trouver_ps2_jam(Path("Levels") / "LDRMHALL.JAM", index_ps2)
-    if ps2_path is None:
-        # Certains dumps utilisent directement le nom sans arborescence identique.
-        ps2_path = trouver_ps2_jam("LDRMHALL.JAM", index_ps2)
-    if ps2_path is None:
-        raise FileNotFoundError(
-            "LDRMHALL.JAM PS2 introuvable dans PS2_VERSION/Data/JamFiles."
-        )
 
-    print(f"[JAM2/ACX] Langue : {langue.upper()}")
-    print(f"[JAM2/ACX] PC  : {pc_path}")
-    print(f"[JAM2/ACX] PS2 : {ps2_path}")
+    # =========================================================
+    # LISTE DES JAM PC
+    # =========================================================
 
-    pc = _jam2_acx_lire(pc_path)
-    ps2 = _jam2_acx_lire(ps2_path)
-
-    # Sécurité essentielle : notre repacker doit reproduire le JAM PC courant
-    # octet pour octet AVANT toute modification audio.
-    test = _jam2_acx_reconstruire(pc)
-    if test != pc["raw"]:
-        raise RuntimeError(
-            "Reconstruction JAM2 PC non byte-identique avant injection : abandon."
-        )
-
-    remplaces, attendus = _jam2_acx_injecter(pc, ps2, langue)
-    resultat = _jam2_acx_reconstruire(pc)
-
-    # Ecriture atomique : le JAM courant n'est remplacé qu'après reconstruction.
-    temporaire = pc_path.with_suffix(".JAM.jam2acx_tmp")
-    temporaire.write_bytes(resultat)
-    verification = _jam2_acx_lire(temporaire)
-    adx_finaux = _jam2_acx_scanner(verification)
-    if len(adx_finaux) != attendus:
-        temporaire.unlink(missing_ok=True)
-        raise RuntimeError(
-            f"Verification finale ADX incorrecte : {len(adx_finaux)}/{attendus}."
-        )
-
-    temporaire.replace(pc_path)
-    print(
-        f"[JAM2/ACX] OK : {remplaces} ACX / {attendus} ADX injectes "
-        f"pour {langue.upper()}."
+    fichiers_pc = sorted(
+        pc_root.glob("*.JAM"),
+        key=lambda fichier: fichier.name.upper()
     )
-    return True
+
+    print()
+    print("=" * 72)
+    print(
+        " AUDIO JAM2 / ACX MULTILANGUE "
+        "- TOUS LES JAM"
+    )
+    print("=" * 72)
+
+    print(
+        f"Langue      : {langue.upper()}"
+    )
+
+    print(
+        f"JAM PC      : {len(fichiers_pc)}"
+    )
+
+    print()
+
+    # =========================================================
+    # COMPTEURS
+    # =========================================================
+
+    total_analyses = 0
+    total_localises = 0
+    total_ignores = 0
+    total_erreurs = 0
+
+    total_acx = 0
+    total_adx = 0
+
+    # =========================================================
+    # TRAITEMENT
+    # =========================================================
+
+    for numero, pc_path in enumerate(
+        fichiers_pc,
+        start=1
+    ):
+
+        total_analyses += 1
+
+        print()
+        print("-" * 72)
+
+        print(
+            f"[JAM2/ACX] "
+            f"[{numero}/{len(fichiers_pc)}] "
+            f"{pc_path.name}"
+        )
+
+        # =====================================================
+        # CHERCHER LE JAM PS2 CORRESPONDANT
+        # =====================================================
+
+        ps2_path = trouver_ps2_jam(
+            Path("Levels") / pc_path.name,
+            index_ps2
+        )
+
+        # Certains dumps PS2 peuvent ne pas conserver
+        # exactement la même arborescence.
+        #
+        # On retente donc avec le nom seul.
+
+        if ps2_path is None:
+
+            ps2_path = trouver_ps2_jam(
+                pc_path.name,
+                index_ps2
+            )
+
+        if ps2_path is None:
+
+            print(
+                "    IGNORE : "
+                "aucun JAM PS2 correspondant."
+            )
+
+            total_ignores += 1
+
+            continue
+
+        print(
+            f"    PC  : {pc_path.name}"
+        )
+
+        print(
+            f"    PS2 : {Path(ps2_path).name}"
+        )
+
+        # =====================================================
+        # TRAITEMENT SECURISE DU JAM
+        # =====================================================
+
+        try:
+
+            # -------------------------------------------------
+            # LECTURE
+            # -------------------------------------------------
+
+            pc = _jam2_acx_lire(
+                pc_path
+            )
+
+            ps2 = _jam2_acx_lire(
+                ps2_path
+            )
+
+            # -------------------------------------------------
+            # TEST BYTE-IDENTIQUE AVANT MODIFICATION
+            # -------------------------------------------------
+            #
+            # C'est notre garde-fou principal.
+            #
+            # Si notre repacker n'arrive pas à reconstruire
+            # exactement le JAM PC original, on ne modifie
+            # absolument pas ce fichier.
+            # -------------------------------------------------
+
+            test = _jam2_acx_reconstruire(
+                pc
+            )
+
+            if test != pc["raw"]:
+
+                print(
+                    "    IGNORE : reconstruction "
+                    "PC non byte-identique."
+                )
+
+                total_ignores += 1
+
+                continue
+
+            print(
+                "    Reconstruction PC "
+                "byte-identique : OK"
+            )
+
+            # -------------------------------------------------
+            # INJECTION DES ACX
+            # -------------------------------------------------
+            #
+            # Cette fonction existe déjà dans ton All-in-One.
+            #
+            # Elle :
+            #   - détecte les ADX ;
+            #   - associe les ACX par leur nom ;
+            #   - contrôle le nombre d'ADX ;
+            #   - refuse les ACX compressés ;
+            #   - remplace l'ACX COMPLET.
+            # -------------------------------------------------
+
+            remplaces, attendus = (
+                _jam2_acx_injecter(
+                    pc,
+                    ps2,
+                    langue
+                )
+            )
+
+            # -------------------------------------------------
+            # RECONSTRUCTION
+            # -------------------------------------------------
+
+            resultat = (
+                _jam2_acx_reconstruire(
+                    pc
+                )
+            )
+
+            # -------------------------------------------------
+            # FICHIER TEMPORAIRE
+            # -------------------------------------------------
+            #
+            # On ne remplace surtout pas pc_path immédiatement.
+            #
+            # Le nouveau fichier doit d'abord réussir
+            # tous les contrôles.
+            # -------------------------------------------------
+
+            temporaire = pc_path.with_suffix(
+                ".JAM.jam2acx_tmp"
+            )
+
+            temporaire.write_bytes(
+                resultat
+            )
+
+            # -------------------------------------------------
+            # RELECTURE
+            # -------------------------------------------------
+
+            verification = (
+                _jam2_acx_lire(
+                    temporaire
+                )
+            )
+
+            adx_finaux = (
+                _jam2_acx_scanner(
+                    verification
+                )
+            )
+
+            # -------------------------------------------------
+            # VERIFICATION DU NOMBRE D'ADX
+            # -------------------------------------------------
+
+            if len(adx_finaux) != attendus:
+
+                temporaire.unlink(
+                    missing_ok=True
+                )
+
+                raise RuntimeError(
+                    "Verification finale ADX "
+                    "incorrecte : "
+                    f"{len(adx_finaux)}/"
+                    f"{attendus}."
+                )
+
+            # -------------------------------------------------
+            # VALIDATION
+            # -------------------------------------------------
+            #
+            # Seulement maintenant le JAM TEMP est remplacé.
+            # -------------------------------------------------
+
+            temporaire.replace(
+                pc_path
+            )
+
+            # -------------------------------------------------
+            # COMPTEURS
+            # -------------------------------------------------
+
+            total_localises += 1
+            total_acx += remplaces
+            total_adx += attendus
+
+            print(
+                f"    OK : "
+                f"{remplaces} ACX / "
+                f"{attendus} ADX "
+                f"injectes pour "
+                f"{langue.upper()}."
+            )
+
+        # =====================================================
+        # JAM INCOMPATIBLE
+        # =====================================================
+        #
+        # IMPORTANT :
+        #
+        # Un seul JAM incompatible ne doit PAS faire tomber
+        # toute la construction du jeu.
+        #
+        # Il reste simplement inchangé dans TEMP.
+        # =====================================================
+
+        except Exception as erreur:
+
+            total_erreurs += 1
+
+            # Supprime un éventuel fichier temporaire
+            # laissé par une erreur pendant la vérification.
+
+            temporaire = pc_path.with_suffix(
+                ".JAM.jam2acx_tmp"
+            )
+
+            temporaire.unlink(
+                missing_ok=True
+            )
+
+            print(
+                "    IGNORE / ERREUR :",
+                erreur
+            )
+
+            continue
+
+    # =========================================================
+    # BILAN FINAL
+    # =========================================================
+
+    print()
+    print()
+    print("=" * 72)
+    print(
+        " BILAN AUDIO JAM2 / ACX "
+        + langue.upper()
+    )
+    print("=" * 72)
+
+    print(
+        f"JAM analyses       : {total_analyses}"
+    )
+
+    print(
+        f"JAM localises      : {total_localises}"
+    )
+
+    print(
+        f"JAM ignores        : {total_ignores}"
+    )
+
+    print(
+        f"JAM incompatibles  : {total_erreurs}"
+    )
+
+    print(
+        f"ACX injectes       : {total_acx}"
+    )
+
+    print(
+        f"ADX injectes       : {total_adx}"
+    )
+
+    print("=" * 72)
+
+    # =========================================================
+    # RETOUR
+    # =========================================================
+
+    return total_localises > 0
 
 
 def construire_version_fr(game_root, langue_cible="fr"):
