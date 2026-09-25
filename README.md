@@ -1,11 +1,14 @@
 # Leisure Suit Larry: Magna Cum Laude --- Multi Language PC
 
 <p align="center">
-  <img src="LSL_MCL_01_Menu_FR.jpg" width="12%">
-  <img src="LSL_MCL_02_LIVRE_NOIR_FR.jpg" width="12%">
-  <img src="LSL_MCL_02_LIVRE_NOIR_DE.jpg" width="12%">
-  <img src="LSL_MCL_02_LIVRE_NOIR_SE.jpg" width="12%">
-  <img src="LSL_MCL_02_LIVRE_NOIR_IT.jpg" width="12%">
+  <img src="LSL_MCL_01_Menu_FR.jpg" width="49%">
+  <img src="LSL_MCL_02_LIVRE_NOIR_FR.jpg" width="49%">
+</p>
+
+<p align="center">
+  <img src="LSL_MCL_02_LIVRE_NOIR_DE.jpg" width="30%">
+  <img src="LSL_MCL_02_LIVRE_NOIR_SE.jpg" width="30%">
+  <img src="LSL_MCL_02_LIVRE_NOIR_IT.jpg" width="30%">
 </p>
 
 
