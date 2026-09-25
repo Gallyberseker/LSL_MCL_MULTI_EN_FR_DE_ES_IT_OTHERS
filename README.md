@@ -1,5 +1,11 @@
 # Leisure Suit Larry: Magna Cum Laude --- Multi Language PC
 
+<p align="center">
+  <img src="Screenshots/menu_principal_fr.png" width="48%">
+  <img src="Screenshots/livre_noir_fr.png" width="48%">
+</p>
+
+
 Outil de localisation et de reconstruction pour **Leisure Suit Larry:
 Magna Cum Laude** permettant d'exploiter les ressources des versions
 **PS2** afin de créer une version **PC localisée**.
@@ -11,7 +17,7 @@ Développé par **Gallyberseker**.
 > Suit Larry: Magna Cum Laude*.
 
 ------------------------------------------------------------------------
-
+<img src="Screenshots/menu_principal_fr.png" width="700">
 ## 🎯 Objectif du projet
 
 Le but est de reconstruire automatiquement une version PC localisée du
