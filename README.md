@@ -17,7 +17,7 @@ Développé par **Gallyberseker**.
 > Suit Larry: Magna Cum Laude*.
 
 ------------------------------------------------------------------------
-<img src="Screenshots/menu_principal_fr.png" width="700">
+
 ## 🎯 Objectif du projet
 
 Le but est de reconstruire automatiquement une version PC localisée du
