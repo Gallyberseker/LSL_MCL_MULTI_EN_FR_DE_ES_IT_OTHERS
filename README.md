@@ -1,8 +1,11 @@
 # Leisure Suit Larry: Magna Cum Laude --- Multi Language PC
 
 <p align="center">
-  <img src="LSL_MCL_01_Menu_FR.jpg" width="48%">
-  <img src="LSL_MCL_02_LIVRE_NOIR_FR.jpg" width="48%">
+  <img src="LSL_MCL_01_Menu_FR.jpg" width="19%">
+  <img src="LSL_MCL_02_LIVRE_NOIR_FR.jpg" width="19%">
+  <img src="LSL_MCL_02_LIVRE_NOIR_DE.jpg" width="19%">
+  <img src="LSL_MCL_02_LIVRE_NOIR_SE.jpg" width="19%">
+  <img src="LSL_MCL_02_LIVRE_NOIR_IT.jpg" width="19%">
 </p>
 
 
@@ -26,7 +29,7 @@ PS2.
 
 Langues actuellement prises en charge par l'architecture :
 
--   🇬🇧 Anglais
+-   EN Anglais
 -   🇫🇷 Français
 -   🇩🇪 Allemand
 -   🇪🇸 Espagnol
